@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chromatic — Color Extractor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,700;1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F1EA;
+    --ink: #1A1A1A;
+    --accent: #A0391C;
+    --muted: #8A8579;
+    --rule: #D6D1C4;
+    --card: #FEFCF7;
+    --shadow: 0 1px 0 rgba(26,26,26,0.04), 0 8px 24px rgba(26,26,26,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Fraunces', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(26,26,26,0.045) 1px, transparent 0);
+    background-size: 28px 28px;
+  }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 72px 32px 80px;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 24px;
+    margin-bottom: 48px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 42px;
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 144;
+    line-height: 1;
+  }
+  .brand em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .tagline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+
+  /* Intro */
+  .intro {
+    font-size: 19px;
+    line-height: 1.6;
+    max-width: 56ch;
+    margin-bottom: 48px;
+    color: var(--ink);
+  }
+  .intro strong {
+    font-weight: 500;
+    background: linear-gradient(transparent 65%, rgba(160,57,28,0.15) 65%);
+    padding: 0 2px;
+  }
+
+  /* Form Card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 36px;
+    box-shadow: var(--shadow);
+  }
+
+  .field {
+    margin-bottom: 28px;
+  }
+  .field:last-of-type { margin-bottom: 0; }
+
+  .label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .label .num {
+    display: inline-block;
+    margin-right: 10px;
+    color: var(--accent);
+  }
+
+  /* Radio options */
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .option {
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #fff;
+    position: relative;
+  }
+  .option:hover {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+  }
+  .option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .option.selected {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .option.selected .desc { color: var(--rule); }
+
+  .option-name {
+    font-weight: 500;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .option .desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* File drop zone */
+  .dropzone {
+    border: 1.5px dashed var(--rule);
+    border-radius: 3px;
+    padding: 40px 24px;
+    text-align: center;
+    background: #fff;
+    transition: all 0.18s ease;
+    cursor: pointer;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: #FFF9F5;
+  }
+  .dropzone.has-file {
+    border-color: var(--ink);
+    border-style: solid;
+    background: #fff;
+    text-align: left;
+  }
+
+  .dz-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  .dz-text {
+    font-size: 16px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .dz-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .dz-file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .dz-filename {
+    font-weight: 500;
+    font-size: 16px;
+    word-break: break-all;
+  }
+  .dz-size {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .dz-remove {
+    background: none;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+  }
+  .dz-remove:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* Submit button */
+  .submit {
+    width: 100%;
+    margin-top: 32px;
+    padding: 18px 24px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 3px;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 500;
+    font-style: italic;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .submit:hover:not(:disabled) {
+    background: var(--accent);
+    transform: translateY(-1px);
+  }
+  .submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Status */
+  .status {
+    margin-top: 24px;
+    padding: 20px;
+    border-left: 2px solid var(--accent);
+    background: #FFF9F5;
+    display: none;
+    font-size: 15px;
+  }
+  .status.show { display: block; }
+  .status.error {
+    border-left-color: #C13030;
+    background: #FFF0F0;
+  }
+  .status.success {
+    border-left-color: #2A7F3E;
+    background: #F0FAF2;
+  }
+  .status-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .status-msg {
+    font-weight: 500;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 48px 20px 48px; }
+    .brand { font-size: 34px; }
+    .options { grid-template-columns: 1fr; }
+    .card { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">Chro<em>matic</em></div>
+    <div class="tagline">v1 · Color Extractor</div>
+  </header>
+
+  <p class="intro">
+    Upload a <strong>zip of product images</strong> — named by SKU — and receive a clean xlsx
+    with the color family and specific color for each item.
+  </p>
+
+  <form id="form" class="card">
+    <div class="field">
+      <label class="label"><span class="num">01</span> Product type</label>
+      <div class="options" id="modeOptions">
+        <label class="option selected" data-value="garment">
+          <input type="radio" name="mode" value="garment" checked>
+          <div class="option-name">Garment</div>
+          <div class="desc">Skirts, dresses, tops, co-ords. Center-sampled.</div>
+        </label>
+        <label class="option" data-value="footwear">
+          <input type="radio" name="mode" value="footwear">
+          <div class="option-name">Footwear</div>
+          <div class="desc">Shoes, boots, sandals. Handles skin &amp; scenery.</div>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">02</span> Zip of images</label>
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".zip" hidden>
+        <div id="dzEmpty">
+          <div class="dz-icon">↑</div>
+          <div class="dz-text">Drop a zip here, or click to browse</div>
+          <div class="dz-hint">.webp · .jpg · .png · filenames become SKUs</div>
+        </div>
+        <div id="dzFilled" class="dz-file" style="display:none">
+          <div>
+            <div class="dz-filename" id="fileName"></div>
+            <div class="dz-size" id="fileSize"></div>
+          </div>
+          <button type="button" class="dz-remove" id="removeBtn">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="submit" id="submitBtn" disabled>
+      <span id="submitText">Extract colors</span>
+    </button>
+
+    <div class="status" id="status">
+      <div class="status-title" id="statusTitle"></div>
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+  </form>
+
+  <footer>
+    <span>— Made with Python + FastAPI —</span>
+    <span id="healthText">Checking server…</span>
+  </footer>
+
+</div>
+
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const dzEmpty = document.getElementById('dzEmpty');
+  const dzFilled = document.getElementById('dzFilled');
+  const fileName = document.getElementById('fileName');
+  const fileSize = document.getElementById('fileSize');
+  const removeBtn = document.getElementById('removeBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const submitText = document.getElementById('submitText');
+  const form = document.getElementById('form');
+  const status = document.getElementById('status');
+  const statusTitle = document.getElementById('statusTitle');
+  const statusMsg = document.getElementById('statusMsg');
+  const healthText = document.getElementById('healthText');
+
+  let selectedFile = null;
+
+  // Mode selector
+  document.querySelectorAll('.option').forEach(opt => {
+    opt.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      opt.querySelector('input').checked = true;
+    });
+  });
+
+  // File picker
+  dropzone.addEventListener('click', (e) => {
+    if (e.target === removeBtn) return;
+    if (!selectedFile) fileInput.click();
+  });
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+
+  // Drag/drop
+  ['dragenter', 'dragover'].forEach(ev => {
+    dropzone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    dropzone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+    });
+  });
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+
+  removeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectedFile = null;
+    fileInput.value = '';
+    dzEmpty.style.display = '';
+    dzFilled.style.display = 'none';
+    dropzone.classList.remove('has-file');
+    submitBtn.disabled = true;
+  });
+
+  function handleFile(file) {
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      showStatus('error', 'Invalid file', 'Please upload a .zip file.');
+      return;
+    }
+    selectedFile = file;
+    fileName.textContent = file.name;
+    fileSize.textContent = formatSize(file.size);
+    dzEmpty.style.display = 'none';
+    dzFilled.style.display = 'flex';
+    dropzone.classList.add('has-file');
+    submitBtn.disabled = false;
+    hideStatus();
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function showStatus(type, title, msg) {
+    status.className = 'status show ' + type;
+    statusTitle.textContent = title;
+    statusMsg.textContent = msg;
+  }
+  function hideStatus() {
+    status.className = 'status';
+  }
+
+  // Submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+
+    submitBtn.disabled = true;
+    submitText.innerHTML = '<span class="spinner"></span>Processing…';
+    showStatus('', 'Working', 'Extracting colors from each image. Larger zips take longer.');
+
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+    fd.append('mode', mode);
+
+    try {
+      const res = await fetch('/extract', { method: 'POST', body: fd });
+
+      if (!res.ok) {
+        let errMsg = 'Something went wrong';
+        try {
+          const data = await res.json();
+          errMsg = data.detail || errMsg;
+        } catch {}
+        throw new Error(errMsg);
+      }
+
+      const processed = res.headers.get('X-Processed-Count') || '?';
+      const errors = res.headers.get('X-Error-Count') || '0';
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      a.download = match ? match[1] : 'colors.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      showStatus('success', 'Done',
+        `Processed ${processed} image(s)${errors !== '0' ? ` · ${errors} error(s)` : ''}. Download started.`);
+
+    } catch (err) {
+      showStatus('error', 'Failed', err.message || String(err));
+    } finally {
+      submitBtn.disabled = false;
+      submitText.textContent = 'Extract colors';
+    }
+  });
+
+  // Health ping
+  fetch('/health').then(r => r.ok ? r.json() : null).then(d => {
+    healthText.textContent = d && d.status === 'ok' ? 'Server: online' : 'Server: offline';
+  }).catch(() => {
+    healthText.textContent = 'Server: offline';
+  });
+</script>
+</body>
+</html>
