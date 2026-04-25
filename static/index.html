@@ -518,13 +518,19 @@
       const processed = res.headers.get('X-Processed-Count') || '?';
       const errors = res.headers.get('X-Error-Count') || '0';
 
-      const blob = await res.blob();
+      const rawBlob = await res.blob();
+      // Force correct MIME type for xlsx
+      const blob = new Blob([rawBlob], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
+      // Build filename from uploaded zip name
+      const baseName = selectedFile.name.replace(/\.zip$/i, '');
       const disposition = res.headers.get('Content-Disposition') || '';
       const match = disposition.match(/filename="?([^"]+)"?/);
-      a.download = match ? match[1] : 'colors.xlsx';
+      a.download = match ? match[1] : `${baseName}_colors.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
