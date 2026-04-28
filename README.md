@@ -1,6 +1,10 @@
 # Chromatic — Garment Color Extractor
 
-A self-hosted web app that takes a zip of product images (named by SKU) and returns an xlsx file with the **Color Family** and **Specific Color** for each item.
+A self-hosted web app that takes a zip of product images (named by SKU) and returns an xlsx file with the **canonical color name**, **hex code**, and **parent color** for each item.
+
+The classifier uses a curated palette of ~285 brand-canonical colors (e.g. Chocolate, Burgundy, Dusty Rose, Midnight Navy, Charcoal Black, Soft Powder Pink, Raspberry Pink, Sage Green, etc.) and matches sampled image colors using **Delta E in CIELAB color space** for perceptually accurate naming.
+
+Output columns: `SKU | Color | Color Code | Parent Color`
 
 Two extraction modes:
 - **Garment** — for skirts, dresses, tops, co-ords. Samples the center of the frame.
@@ -114,7 +118,7 @@ curl -X POST https://your-deployed-url.com/extract \
   -o output.xlsx
 ```
 
-Returns an `.xlsx` with three columns: `SKU`, `Color Family`, `Specific Color`.
+Returns an `.xlsx` with four columns: `SKU`, `Color`, `Color Code`, `Parent Color`.
 
 Response headers include:
 - `X-Processed-Count` — number of images processed
@@ -128,8 +132,12 @@ Response headers include:
 2. **Background removal** — strips near-white and neutral-gray pixels (product backgrounds).
 3. **Skin removal** (footwear only) — filters out feet/leg tones.
 4. **Busy-scene detection** (footwear only) — if the sample has wide brightness/hue variance, it assumes a lifestyle shot and picks the dominant dark cluster (usually the shoe).
-5. **Median color** — takes the median of the filtered pixels (more robust than mean to outliers).
-6. **Classification** — maps the RGB to a named color using HSV hue zones plus value/saturation thresholds. Returns both a broad family (e.g. "Brown") and a specific color (e.g. "Chocolate" or "Camel").
+5. **Median color** — takes the median of the filtered pixels (robust to outliers).
+6. **Classification** — converts the sampled RGB to CIELAB color space, then finds the perceptually nearest entry in the canonical palette (`api/palette.json`) using Delta E (CIE76) distance. Returns the canonical color name, its established hex code, and parent color group.
+
+### Customizing the Palette
+
+The color palette is in `api/palette.json` — a list of objects with `name`, `hex`, and `parent`. Add, remove, or edit entries to tune classifications. No code changes needed.
 
 ### Known Limitations
 
