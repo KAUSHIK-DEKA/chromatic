@@ -1,5 +1,15 @@
 [
   {
+    "name": "Apricot",
+    "hex": "#F5B482",
+    "parent": "Orange"
+  },
+  {
+    "name": "Aqua Blue",
+    "hex": "#00C8E6",
+    "parent": "Blue"
+  },
+  {
     "name": "Army Green",
     "hex": "#5E6234",
     "parent": "Green"
@@ -45,6 +55,11 @@
     "parent": "Black"
   },
   {
+    "name": "Blue",
+    "hex": "#3264BE",
+    "parent": "Blue"
+  },
+  {
     "name": "Blush",
     "hex": "#DE9090",
     "parent": "Pink"
@@ -58,6 +73,11 @@
     "name": "Blush Pink",
     "hex": "#E9C4C0",
     "parent": "Pink"
+  },
+  {
+    "name": "Bone",
+    "hex": "#E3DAC9",
+    "parent": "Beige"
   },
   {
     "name": "Bordeaux",
@@ -150,6 +170,11 @@
     "parent": "Brown"
   },
   {
+    "name": "Caramel",
+    "hex": "#AA6E3C",
+    "parent": "Brown"
+  },
+  {
     "name": "Caramel Brown",
     "hex": "#9A643C",
     "parent": "Brown"
@@ -203,6 +228,11 @@
     "name": "Cherry Wine",
     "hex": "#7A0F1F",
     "parent": "Maroon"
+  },
+  {
+    "name": "Chestnut",
+    "hex": "#78412D",
+    "parent": "Brown"
   },
   {
     "name": "Chestnut Brown",
@@ -265,6 +295,11 @@
     "parent": "Blue"
   },
   {
+    "name": "Cocoa",
+    "hex": "#5F3C28",
+    "parent": "Brown"
+  },
+  {
     "name": "Cocoa Brown",
     "hex": "#6A4336",
     "parent": "Brown"
@@ -288,6 +323,16 @@
     "name": "Coffee Brown",
     "hex": "#5B3A32",
     "parent": "Brown"
+  },
+  {
+    "name": "Coral",
+    "hex": "#FF7F50",
+    "parent": "Orange"
+  },
+  {
+    "name": "Coral Pink",
+    "hex": "#F08282",
+    "parent": "Pink"
   },
   {
     "name": "Cornflower Blue",
@@ -330,6 +375,11 @@
     "parent": "Maroon"
   },
   {
+    "name": "Dark Chocolate",
+    "hex": "#2A1A10",
+    "parent": "Brown"
+  },
+  {
     "name": "Dark Chocolate Brown",
     "hex": "#3F2A23",
     "parent": "Brown"
@@ -345,9 +395,24 @@
     "parent": "Brown"
   },
   {
+    "name": "Dark Gray",
+    "hex": "#5F5F64",
+    "parent": "Gray"
+  },
+  {
+    "name": "Dark Green",
+    "hex": "#1E502D",
+    "parent": "Green"
+  },
+  {
     "name": "Dark Grey",
     "hex": "#4A4A4A",
     "parent": "Grey"
+  },
+  {
+    "name": "Dark Maroon",
+    "hex": "#5A1219",
+    "parent": "Maroon"
   },
   {
     "name": "Dark Midnight Blue",
@@ -363,6 +428,16 @@
     "name": "Dark Olive Brown",
     "hex": "#3F372E",
     "parent": "Brown"
+  },
+  {
+    "name": "Dark Orange",
+    "hex": "#FF8C00",
+    "parent": "Orange"
+  },
+  {
+    "name": "Dark Salmon",
+    "hex": "#E9967A",
+    "parent": "Red"
   },
   {
     "name": "Dark Sapphire",
@@ -458,6 +533,11 @@
     "name": "Deep Navy Blue",
     "hex": "#0E1A33",
     "parent": "Blue"
+  },
+  {
+    "name": "Deep Purple",
+    "hex": "#551E6E",
+    "parent": "Purple"
   },
   {
     "name": "Deep Raspberry",
@@ -570,6 +650,21 @@
     "parent": "Beige"
   },
   {
+    "name": "Eggplant",
+    "hex": "#4B324B",
+    "parent": "Purple"
+  },
+  {
+    "name": "Eggshell",
+    "hex": "#F0EAD6",
+    "parent": "White"
+  },
+  {
+    "name": "Emerald Green",
+    "hex": "#1E825F",
+    "parent": "Green"
+  },
+  {
     "name": "Espresso",
     "hex": "#3E2B23",
     "parent": "Brown"
@@ -583,6 +678,11 @@
     "name": "Espresso Chocolate Brown",
     "hex": "#4A3128",
     "parent": "Brown"
+  },
+  {
+    "name": "Firebrick",
+    "hex": "#B22222",
+    "parent": "Red"
   },
   {
     "name": "Forest Green",
@@ -600,14 +700,34 @@
     "parent": "Yellow"
   },
   {
+    "name": "Fuchsia",
+    "hex": "#DC3C8C",
+    "parent": "Pink"
+  },
+  {
     "name": "Fuchsia Pink",
     "hex": "#C2185B",
     "parent": "Pink"
   },
   {
+    "name": "Gainsboro",
+    "hex": "#DCDCDE",
+    "parent": "Gray"
+  },
+  {
+    "name": "Gold",
+    "hex": "#D4AF37",
+    "parent": "Yellow"
+  },
+  {
     "name": "Gray",
     "hex": "#808080",
     "parent": "Gray"
+  },
+  {
+    "name": "Green",
+    "hex": "#3C8C46",
+    "parent": "Green"
   },
   {
     "name": "Greige",
@@ -620,14 +740,34 @@
     "parent": "Grey"
   },
   {
+    "name": "Hazelnut",
+    "hex": "#9B7350",
+    "parent": "Brown"
+  },
+  {
+    "name": "Honey",
+    "hex": "#DCAF50",
+    "parent": "Yellow"
+  },
+  {
     "name": "Hot Pink",
     "hex": "#E91E63",
     "parent": "Pink"
   },
   {
+    "name": "Hunter Green",
+    "hex": "#325A3C",
+    "parent": "Green"
+  },
+  {
     "name": "Ice Blue",
     "hex": "#C9D1D6",
     "parent": "Blue"
+  },
+  {
+    "name": "Indian Red",
+    "hex": "#CD5C5C",
+    "parent": "Red"
   },
   {
     "name": "Ink Blue",
@@ -660,6 +800,16 @@
     "parent": "Black"
   },
   {
+    "name": "Kelly Green",
+    "hex": "#4CBB17",
+    "parent": "Green"
+  },
+  {
+    "name": "Khaki",
+    "hex": "#C3B091",
+    "parent": "Brown"
+  },
+  {
     "name": "Lavender",
     "hex": "#D7CBE0",
     "parent": "Purple"
@@ -685,6 +835,16 @@
     "parent": "Blue"
   },
   {
+    "name": "Light Brown",
+    "hex": "#A5714E",
+    "parent": "Brown"
+  },
+  {
+    "name": "Light Coral",
+    "hex": "#F08080",
+    "parent": "Red"
+  },
+  {
     "name": "Light Cream",
     "hex": "#EFE5D6",
     "parent": "Beige"
@@ -703,6 +863,11 @@
     "name": "Light Olive",
     "hex": "#BDB76B",
     "parent": "Green"
+  },
+  {
+    "name": "Light Pink",
+    "hex": "#FFB6C1",
+    "parent": "Pink"
   },
   {
     "name": "Light Pistachio Green",
@@ -725,8 +890,18 @@
     "parent": "Grey"
   },
   {
+    "name": "Lilac",
+    "hex": "#D2C3E6",
+    "parent": "Purple"
+  },
+  {
     "name": "Lime",
     "hex": "#BFFF00",
+    "parent": "Green"
+  },
+  {
+    "name": "Lime Green",
+    "hex": "#C8E650",
     "parent": "Green"
   },
   {
@@ -775,6 +950,11 @@
     "parent": "Pink"
   },
   {
+    "name": "Merlot",
+    "hex": "#551E26",
+    "parent": "Maroon"
+  },
+  {
     "name": "Midnight Black",
     "hex": "#000000",
     "parent": "Black"
@@ -793,6 +973,11 @@
     "name": "Midnight Navy Blue",
     "hex": "#1F3A6D",
     "parent": "Blue"
+  },
+  {
+    "name": "Mint Green",
+    "hex": "#B4E1C8",
+    "parent": "Green"
   },
   {
     "name": "Mocha",
@@ -817,6 +1002,11 @@
   {
     "name": "Mustard",
     "hex": "#FFDB58",
+    "parent": "Yellow"
+  },
+  {
+    "name": "Mustard Yellow",
+    "hex": "#CDAA32",
     "parent": "Yellow"
   },
   {
@@ -910,9 +1100,19 @@
     "parent": "Yellow"
   },
   {
+    "name": "Pastel Blue",
+    "hex": "#C8E1F0",
+    "parent": "Blue"
+  },
+  {
     "name": "Pastel Blush Pink",
     "hex": "#E8C9CC",
     "parent": "Pink"
+  },
+  {
+    "name": "Pastel Green",
+    "hex": "#C8E6C3",
+    "parent": "Green"
   },
   {
     "name": "Pastel Lemon",
@@ -923,6 +1123,16 @@
     "name": "Pastel Lemon Yellow",
     "hex": "#EDE29A",
     "parent": "Yellow"
+  },
+  {
+    "name": "Pastel Pink",
+    "hex": "#F5D2DC",
+    "parent": "Pink"
+  },
+  {
+    "name": "Pastel Purple",
+    "hex": "#DCCDEB",
+    "parent": "Purple"
   },
   {
     "name": "Pastel Rose Pink",
@@ -950,9 +1160,19 @@
     "parent": "White"
   },
   {
+    "name": "Periwinkle",
+    "hex": "#A7B2DC",
+    "parent": "Blue"
+  },
+  {
     "name": "Pink",
     "hex": "#FFB6C1",
     "parent": "Pink"
+  },
+  {
+    "name": "Pistachio",
+    "hex": "#C3D7A5",
+    "parent": "Green"
   },
   {
     "name": "Pistachio Green",
@@ -990,6 +1210,11 @@
     "parent": "Pink"
   },
   {
+    "name": "Pumpkin",
+    "hex": "#DC6E28",
+    "parent": "Orange"
+  },
+  {
     "name": "Pure Ivory",
     "hex": "#F4F1EA",
     "parent": "White"
@@ -1008,6 +1233,11 @@
     "name": "Pure White",
     "hex": "#F2F2F2",
     "parent": "White"
+  },
+  {
+    "name": "Purple",
+    "hex": "#8250AA",
+    "parent": "Purple"
   },
   {
     "name": "Raspberry",
@@ -1125,6 +1355,11 @@
     "parent": "Red"
   },
   {
+    "name": "Saddle Brown",
+    "hex": "#8B4513",
+    "parent": "Brown"
+  },
+  {
     "name": "Sage",
     "hex": "#9CAF88",
     "parent": "Green"
@@ -1138,6 +1373,16 @@
     "name": "Sage Olive Green",
     "hex": "#9A9B6B",
     "parent": "Green"
+  },
+  {
+    "name": "Salmon",
+    "hex": "#FA8072",
+    "parent": "Red"
+  },
+  {
+    "name": "Sand",
+    "hex": "#D2B48C",
+    "parent": "Beige"
   },
   {
     "name": "Sand Beige",
@@ -1155,6 +1400,11 @@
     "parent": "Blue"
   },
   {
+    "name": "Scarlet",
+    "hex": "#DC3228",
+    "parent": "Red"
+  },
+  {
     "name": "Scarlet Red",
     "hex": "#C92A2A",
     "parent": "Red"
@@ -1170,6 +1420,16 @@
     "parent": "Brown"
   },
   {
+    "name": "Sienna",
+    "hex": "#A0522D",
+    "parent": "Brown"
+  },
+  {
+    "name": "Silver",
+    "hex": "#C0C0C0",
+    "parent": "Gray"
+  },
+  {
     "name": "Sky Blue",
     "hex": "#A9C7E8",
     "parent": "Blue"
@@ -1180,9 +1440,19 @@
     "parent": "Blue"
   },
   {
+    "name": "Slate Gray",
+    "hex": "#708090",
+    "parent": "Gray"
+  },
+  {
     "name": "Slate Grey",
     "hex": "#5F6C72",
     "parent": "Grey"
+  },
+  {
+    "name": "Snow White",
+    "hex": "#FDFCFA",
+    "parent": "White"
   },
   {
     "name": "Soft Beige",
@@ -1310,6 +1580,11 @@
     "parent": "Brown"
   },
   {
+    "name": "Tangerine",
+    "hex": "#F5823C",
+    "parent": "Orange"
+  },
+  {
     "name": "Taupe",
     "hex": "#483C32",
     "parent": "Brown"
@@ -1350,9 +1625,19 @@
     "parent": "Green"
   },
   {
+    "name": "Terracotta",
+    "hex": "#BE6E55",
+    "parent": "Orange"
+  },
+  {
     "name": "Terracotta Brown",
     "hex": "#8A5A46",
     "parent": "Brown"
+  },
+  {
+    "name": "Tomato",
+    "hex": "#FF6347",
+    "parent": "Red"
   },
   {
     "name": "True Black",
@@ -1370,6 +1655,11 @@
     "parent": "Blue"
   },
   {
+    "name": "Vanilla",
+    "hex": "#F3E5AB",
+    "parent": "White"
+  },
+  {
     "name": "Vanilla Cream",
     "hex": "#F5EDC9",
     "parent": "Yellow"
@@ -1378,6 +1668,16 @@
     "name": "Velvet Burgundy",
     "hex": "#6F0F14",
     "parent": "Red"
+  },
+  {
+    "name": "Violet",
+    "hex": "#8C5AB4",
+    "parent": "Purple"
+  },
+  {
+    "name": "Walnut",
+    "hex": "#5A3C28",
+    "parent": "Brown"
   },
   {
     "name": "Walnut Brown",
@@ -1403,6 +1703,11 @@
     "name": "Warm Tan",
     "hex": "#B38369",
     "parent": "Brown"
+  },
+  {
+    "name": "Watermelon Pink",
+    "hex": "#EB5F6E",
+    "parent": "Pink"
   },
   {
     "name": "White",
