@@ -1,14 +1,30 @@
 # Chromatic — Garment Color Extractor
 
-A self-hosted web app that takes a zip of product images (named by SKU) and returns an xlsx file with the **canonical color name**, **hex code**, and **parent color** for each item.
+A self-hosted web app for extracting and naming colors from product images.
 
-The classifier uses a curated palette of ~285 brand-canonical colors (e.g. Chocolate, Burgundy, Dusty Rose, Midnight Navy, Charcoal Black, Soft Powder Pink, Raspberry Pink, Sage Green, etc.) and matches sampled image colors using **Delta E in CIELAB color space** for perceptually accurate naming.
+**Two tools, one app:**
 
-Output columns: `SKU | Color | Color Code | Parent Color`
+- **Batch** — upload a zip of images (named by SKU), get an xlsx with `SKU | Color | Color Code | Parent Color` for each one.
+- **Calibrate** — upload or paste a single image, see the predicted color, and submit a correction if it's wrong. The model learns from each correction and applies it to similar colors going forward.
 
-Two extraction modes:
+The classifier uses a curated palette of ~285 brand-canonical colors plus any user-submitted anchors, and matches sampled image colors using **Delta E in CIELAB color space** for perceptually accurate naming.
+
+Two extraction modes per tab:
 - **Garment** — for skirts, dresses, tops, co-ords. Samples the center of the frame.
 - **Footwear** — for shoes, boots, sandals. Handles skin (feet/legs) and busy lifestyle backgrounds.
+
+---
+
+## How learning from corrections works
+
+When you submit a correction in the Calibrate tab, the app stores two things:
+
+1. **Image-hash override** — pinned to the SHA256 of the image bytes. Re-uploading that exact file always returns the corrected answer.
+2. **Palette anchor** — the *sampled RGB* of the image is mapped to your chosen color name and added to the in-memory palette. Future images whose dominant color lands near that point will return your name automatically.
+
+This means each correction does two things at once: pins the specific image, and nudges classification for any future similar color.
+
+The palette is a flat JSON file (`api/palette.json`); user corrections live in `api/data/corrections.json` (created at runtime). On Render's free tier the disk is ephemeral and the corrections file is lost on redeploy — use the **Export corrections.json** button regularly to back up, and re-upload via `POST /corrections/import` to restore.
 
 ---
 
@@ -107,9 +123,9 @@ Railway gives $5/month free credit (enough for a low-traffic app). Uses the `Pro
 
 ---
 
-## API Endpoint
+## API Endpoints
 
-If you want to call the backend directly (e.g. from a script):
+### Batch — `POST /extract`
 
 ```bash
 curl -X POST https://your-deployed-url.com/extract \
@@ -119,10 +135,57 @@ curl -X POST https://your-deployed-url.com/extract \
 ```
 
 Returns an `.xlsx` with four columns: `SKU`, `Color`, `Color Code`, `Parent Color`.
+Response headers: `X-Processed-Count`, `X-Error-Count`.
 
-Response headers include:
-- `X-Processed-Count` — number of images processed
-- `X-Error-Count` — number that failed
+### Single image — `POST /classify-single`
+
+```bash
+# Multipart upload
+curl -X POST https://your-deployed-url.com/classify-single \
+  -F "file=@one_image.jpg" \
+  -F "mode=garment"
+
+# Or base64 (e.g. from clipboard paste)
+curl -X POST https://your-deployed-url.com/classify-single \
+  -F "image_b64=data:image/png;base64,..." \
+  -F "mode=garment"
+```
+
+Response:
+```json
+{
+  "name": "Burgundy",
+  "hex": "#800020",
+  "parent": "Maroon",
+  "sampled_rgb": [120, 30, 45],
+  "sampled_hex": "#781E2D",
+  "from_correction": false,
+  "image_hash": "09dd868c..."
+}
+```
+
+### Submit a correction — `POST /correct`
+
+```bash
+curl -X POST https://your-deployed-url.com/correct \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image_hash": "09dd868c...",
+    "sampled_rgb": [120, 30, 45],
+    "corrected_hex": "#7A1F2A",
+    "corrected_name": "Wine Red",
+    "corrected_family": "Maroon"
+  }'
+```
+
+`image_hash` and `corrected_name`/`corrected_family` are optional. If name is omitted, the correction is stored as `Custom #RRGGBB`. If family is omitted, it's auto-detected from the nearest base-palette entry.
+
+### Corrections management
+
+- `GET /corrections/stats` — counts of overrides, anchors, and total palette size.
+- `GET /corrections/export` — downloads `corrections.json` for backup.
+- `POST /corrections/import` — multipart upload of a `corrections.json`. Form field `mode=merge|replace`.
+- `POST /corrections/reset` — wipe all corrections (irreversible).
 
 ---
 

@@ -1,33 +1,56 @@
 """
-FastAPI backend for Color Extractor.
+FastAPI backend for Chromatic.
 
 Endpoints:
-  GET  /          -> serve the frontend (index.html)
-  POST /extract   -> accept zip upload + mode, return xlsx file
+  GET  /                       -> serve frontend (index.html)
+  GET  /health                 -> {"status": "ok"}
 
-Output columns: SKU, Color, Color Code, Parent Color
+  Batch tool:
+  POST /extract                -> zip in, xlsx out
+
+  Single-image + calibration tool:
+  POST /classify-single        -> one image (multipart OR base64), returns prediction
+  POST /correct                -> submit a correction; learns for future images
+  GET  /corrections/export     -> download corrections.json
+  POST /corrections/import     -> upload a corrections.json (merge or replace)
+  GET  /corrections/stats      -> counts
+  POST /corrections/reset      -> wipe all corrections
 """
+import base64
 import io
+import json
 import os
+import re
 import zipfile
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from pydantic import BaseModel, Field
 
-from color_extractor import process_image
+from color_extractor import (
+    add_correction,
+    get_corrections_snapshot,
+    get_corrections_stats,
+    hash_image_bytes,
+    import_corrections,
+    process_image,
+    reset_corrections,
+)
 
-app = FastAPI(title="Garment Color Extractor")
+app = FastAPI(title="Chromatic — Color Extractor")
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
 IMAGE_EXTS = {".webp", ".jpg", ".jpeg", ".png"}
+MAX_SINGLE_IMAGE_BYTES = 10 * 1024 * 1024  # 10 MB sanity cap
 
 
+# ---------------- Static frontend ----------------
 @app.get("/")
 def serve_frontend():
     html_path = STATIC_DIR / "index.html"
@@ -45,12 +68,12 @@ def health():
     return {"status": "ok"}
 
 
+# ---------------- Batch extract (unchanged) ----------------
 @app.post("/extract")
 async def extract_colors(
     file: UploadFile = File(...),
     mode: Literal["garment", "footwear"] = Form("garment"),
 ):
-    """Accept a zip of images, return xlsx with SKU, Color, Color Code, Parent Color."""
     if not file.filename.lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="Please upload a .zip file")
 
@@ -88,8 +111,8 @@ async def extract_colors(
                 sku = os.path.splitext(basename)[0]
                 try:
                     with zf.open(zip_path) as img_file:
-                        img_bytes = io.BytesIO(img_file.read())
-                    result = process_image(img_bytes, mode=mode)
+                        raw = img_file.read()
+                    result = process_image(io.BytesIO(raw), mode=mode, image_bytes=raw)
                     rows.append((sku, result["name"], result["hex"], result["parent"]))
                 except Exception as e:
                     rows.append((sku, "ERROR", "", str(e)[:60]))
@@ -97,7 +120,6 @@ async def extract_colors(
     except zipfile.BadZipFile:
         raise HTTPException(status_code=400, detail="Invalid or corrupted zip file")
 
-    # Build xlsx with new column schema
     wb = Workbook()
     ws = wb.active
     ws.title = mode.capitalize()
@@ -147,6 +169,117 @@ async def extract_colors(
             "X-Error-Count": str(len(errors)),
         },
     )
+
+
+# ---------------- Single-image classify ----------------
+@app.post("/classify-single")
+async def classify_single(
+    file: Optional[UploadFile] = File(None),
+    image_b64: Optional[str] = Form(None),
+    mode: Literal["garment", "footwear"] = Form("garment"),
+):
+    """Classify a single image, given as either multipart upload OR base64 string.
+    Used by the calibration tab.
+    """
+    if file is None and not image_b64:
+        raise HTTPException(status_code=400, detail="Provide either a file or image_b64")
+
+    if file is not None:
+        raw = await file.read()
+    else:
+        # image_b64 may be a data URL ("data:image/png;base64,....") or raw base64
+        b64_clean = image_b64.split(",", 1)[1] if "," in image_b64 else image_b64
+        try:
+            raw = base64.b64decode(b64_clean)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid base64 image data")
+
+    if not raw:
+        raise HTTPException(status_code=400, detail="Empty image data")
+    if len(raw) > MAX_SINGLE_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="Image too large (max 10MB)")
+
+    try:
+        result = process_image(io.BytesIO(raw), mode=mode, image_bytes=raw)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to process image: {e}")
+
+    return JSONResponse(result)
+
+
+# ---------------- Corrections ----------------
+class CorrectionRequest(BaseModel):
+    image_hash: Optional[str] = None
+    sampled_rgb: list = Field(..., min_length=3, max_length=3)
+    corrected_hex: str
+    corrected_name: Optional[str] = None
+    corrected_family: Optional[str] = None
+
+
+_HEX_RE = re.compile(r"^#?[0-9A-Fa-f]{6}$")
+
+
+@app.post("/correct")
+async def correct(req: CorrectionRequest):
+    """Submit a correction. The model learns from this immediately —
+    next request whose extracted RGB is near `sampled_rgb` will be
+    classified using `corrected_name`."""
+    if not _HEX_RE.match(req.corrected_hex):
+        raise HTTPException(status_code=400, detail="corrected_hex must be a 6-digit hex color")
+    try:
+        sampled_rgb = [int(c) for c in req.sampled_rgb]
+        if any(c < 0 or c > 255 for c in sampled_rgb):
+            raise ValueError("rgb out of range")
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="sampled_rgb must be 3 ints 0-255")
+
+    name = (req.corrected_name or "").strip() or None
+    family = (req.corrected_family or "").strip() or None
+
+    saved = add_correction(
+        image_hash=req.image_hash,
+        sampled_rgb=sampled_rgb,
+        corrected_hex=req.corrected_hex,
+        corrected_name=name,
+        corrected_family=family,
+    )
+    return {"ok": True, "saved": saved, "stats": get_corrections_stats()}
+
+
+@app.get("/corrections/export")
+def export_corrections():
+    """Download corrections.json."""
+    snapshot = get_corrections_snapshot()
+    buf = io.BytesIO(json.dumps(snapshot, indent=2).encode("utf-8"))
+    return StreamingResponse(
+        buf,
+        media_type="application/json",
+        headers={"Content-Disposition": 'attachment; filename="corrections.json"'},
+    )
+
+
+@app.post("/corrections/import")
+async def import_corrections_endpoint(
+    file: UploadFile = File(...),
+    mode: Literal["merge", "replace"] = Form("merge"),
+):
+    raw = await file.read()
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+    stats = import_corrections(payload, mode=mode)
+    return {"ok": True, "stats": stats}
+
+
+@app.get("/corrections/stats")
+def corrections_stats():
+    return get_corrections_stats()
+
+
+@app.post("/corrections/reset")
+def corrections_reset():
+    return reset_corrections()
 
 
 if __name__ == "__main__":

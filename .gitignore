@@ -12,3 +12,7 @@ env/
 .vercel
 .vscode/
 .idea/
+
+# Runtime corrections store (use Export/Import to back up)
+api/data/
+data/

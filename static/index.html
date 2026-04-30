@@ -29,29 +29,27 @@
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
-    background-image:
-      radial-gradient(circle at 1px 1px, rgba(26,26,26,0.045) 1px, transparent 0);
+    background-image: radial-gradient(circle at 1px 1px, rgba(26,26,26,0.045) 1px, transparent 0);
     background-size: 28px 28px;
   }
 
   .wrap {
-    max-width: 780px;
+    max-width: 880px;
     margin: 0 auto;
-    padding: 72px 32px 80px;
+    padding: 56px 32px 80px;
   }
 
   /* Header */
   header {
     border-bottom: 1px solid var(--rule);
     padding-bottom: 24px;
-    margin-bottom: 48px;
+    margin-bottom: 36px;
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 24px;
     flex-wrap: wrap;
   }
-
   .brand {
     font-family: 'Fraunces', serif;
     font-weight: 500;
@@ -65,7 +63,6 @@
     color: var(--accent);
     font-weight: 400;
   }
-
   .tagline {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
@@ -74,12 +71,49 @@
     color: var(--muted);
   }
 
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 36px;
+  }
+  .tab {
+    padding: 14px 24px 12px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+  .tab .tnum {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    margin-right: 8px;
+    color: var(--muted);
+    vertical-align: middle;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
   /* Intro */
   .intro {
-    font-size: 19px;
+    font-size: 18px;
     line-height: 1.6;
-    max-width: 56ch;
-    margin-bottom: 48px;
+    max-width: 60ch;
+    margin-bottom: 36px;
     color: var(--ink);
   }
   .intro strong {
@@ -88,18 +122,17 @@
     padding: 0 2px;
   }
 
-  /* Form Card */
+  /* Card */
   .card {
     background: var(--card);
     border: 1px solid var(--rule);
     border-radius: 4px;
-    padding: 36px;
+    padding: 32px;
     box-shadow: var(--shadow);
   }
+  .card + .card { margin-top: 20px; }
 
-  .field {
-    margin-bottom: 28px;
-  }
+  .field { margin-bottom: 24px; }
   .field:last-of-type { margin-bottom: 0; }
 
   .label {
@@ -147,7 +180,6 @@
     color: var(--bg);
   }
   .option.selected .desc { color: var(--rule); }
-
   .option-name {
     font-weight: 500;
     font-size: 17px;
@@ -160,15 +192,16 @@
     line-height: 1.4;
   }
 
-  /* File drop zone */
+  /* Drop zone */
   .dropzone {
     border: 1.5px dashed var(--rule);
     border-radius: 3px;
-    padding: 40px 24px;
+    padding: 36px 24px;
     text-align: center;
     background: #fff;
     transition: all 0.18s ease;
     cursor: pointer;
+    min-height: 120px;
   }
   .dropzone:hover, .dropzone.dragover {
     border-color: var(--accent);
@@ -177,10 +210,8 @@
   .dropzone.has-file {
     border-color: var(--ink);
     border-style: solid;
-    background: #fff;
     text-align: left;
   }
-
   .dz-icon {
     font-size: 28px;
     margin-bottom: 8px;
@@ -232,64 +263,70 @@
     border-color: var(--accent);
   }
 
-  /* Submit button */
-  .submit {
-    width: 100%;
-    margin-top: 32px;
-    padding: 18px 24px;
+  /* Buttons */
+  .btn {
+    padding: 14px 20px;
     background: var(--ink);
     color: var(--bg);
     border: none;
     border-radius: 3px;
     font-family: 'Fraunces', serif;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
     font-style: italic;
     letter-spacing: -0.01em;
     cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
+    transition: all 0.18s ease;
   }
-  .submit:hover:not(:disabled) {
+  .btn:hover:not(:disabled) {
     background: var(--accent);
     transform: translateY(-1px);
   }
-  .submit:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.full { width: 100%; padding: 18px 24px; font-size: 18px; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+    transform: translateY(-1px);
   }
 
-  /* Status */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .btn-row .btn { flex: 1; min-width: 140px; }
+
+  /* Status banner */
   .status {
     margin-top: 24px;
-    padding: 20px;
+    padding: 16px 20px;
     border-left: 2px solid var(--accent);
     background: #FFF9F5;
     display: none;
     font-size: 15px;
   }
   .status.show { display: block; }
-  .status.error {
-    border-left-color: #C13030;
-    background: #FFF0F0;
-  }
-  .status.success {
-    border-left-color: #2A7F3E;
-    background: #F0FAF2;
-  }
+  .status.error { border-left-color: #C13030; background: #FFF0F0; }
+  .status.success { border-left-color: #2A7F3E; background: #F0FAF2; }
   .status-title {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.18em;
     color: var(--muted);
-    margin-bottom: 6px;
-  }
-  .status-msg {
-    font-weight: 500;
+    margin-bottom: 4px;
   }
 
-  /* Loading spinner */
+  /* Spinner */
   .spinner {
     display: inline-block;
     width: 14px;
@@ -301,11 +338,229 @@
     vertical-align: middle;
     margin-right: 10px;
   }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Calibrate panel — result display */
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 4px;
+  }
+  @media (max-width: 700px) {
+    .result-grid { grid-template-columns: 1fr; }
   }
 
-  /* Footer */
+  .preview-box {
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: #fff;
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .preview-box .empty {
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+
+  .swatch-block {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .swatch {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+    background: #f0f0f0;
+    display: flex;
+    align-items: flex-end;
+    padding: 14px 16px;
+  }
+  .swatch .hex-tag {
+    background: rgba(255,255,255,0.92);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 16px;
+    font-size: 15px;
+  }
+  .meta-grid .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    align-self: center;
+  }
+  .meta-grid .v {
+    font-weight: 500;
+    font-size: 16px;
+  }
+  .meta-grid .v.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+  }
+
+  .from-correction-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 3px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  /* Correction form */
+  .correct-block {
+    border-top: 1px solid var(--rule);
+    margin-top: 28px;
+    padding-top: 28px;
+    display: none;
+  }
+  .correct-block.show { display: block; }
+
+  .correct-grid {
+    display: grid;
+    grid-template-columns: max-content 1fr 1fr;
+    gap: 12px 16px;
+    align-items: center;
+  }
+  @media (max-width: 700px) {
+    .correct-grid { grid-template-columns: 1fr; }
+  }
+
+  .correct-grid .row-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+
+  input[type="color"] {
+    width: 100%;
+    height: 44px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: #fff;
+    cursor: pointer;
+    padding: 4px;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: #fff;
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .picked-hex-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  /* Paste zone */
+  .paste-zone {
+    border: 1.5px dashed var(--rule);
+    border-radius: 3px;
+    padding: 14px 16px;
+    text-align: center;
+    background: #fff;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin-top: 10px;
+    cursor: text;
+    transition: all 0.18s ease;
+  }
+  .paste-zone:focus, .paste-zone.has-paste { outline: none; border-color: var(--accent); }
+
+  /* Stats footer */
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(160,57,28,0.04);
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .stats-row .stat strong {
+    color: var(--ink);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+
+  .footer-actions {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .footer-actions a, .footer-actions button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    background: none;
+    border: 1px solid var(--rule);
+    padding: 6px 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .footer-actions a:hover, .footer-actions button:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
   footer {
     margin-top: 64px;
     padding-top: 24px;
@@ -321,10 +576,11 @@
   }
 
   @media (max-width: 600px) {
-    .wrap { padding: 48px 20px 48px; }
-    .brand { font-size: 34px; }
+    .wrap { padding: 40px 18px 48px; }
+    .brand { font-size: 32px; }
     .options { grid-template-columns: 1fr; }
-    .card { padding: 24px; }
+    .card { padding: 20px; }
+    .tab { padding: 12px 16px; font-size: 16px; }
   }
 </style>
 </head>
@@ -333,59 +589,189 @@
 
   <header>
     <div class="brand">Chro<em>matic</em></div>
-    <div class="tagline">v1 · Color Extractor</div>
+    <div class="tagline">v2 · Color Extractor</div>
   </header>
 
-  <p class="intro">
-    Upload a <strong>zip of product images</strong> — named by SKU — and receive a clean xlsx
-    with the canonical color name, hex code, and parent color for each item.
-  </p>
-
-  <form id="form" class="card">
-    <div class="field">
-      <label class="label"><span class="num">01</span> Product type</label>
-      <div class="options" id="modeOptions">
-        <label class="option selected" data-value="garment">
-          <input type="radio" name="mode" value="garment" checked>
-          <div class="option-name">Garment</div>
-          <div class="desc">Skirts, dresses, tops, co-ords. Center-sampled.</div>
-        </label>
-        <label class="option" data-value="footwear">
-          <input type="radio" name="mode" value="footwear">
-          <div class="option-name">Footwear</div>
-          <div class="desc">Shoes, boots, sandals. Handles skin &amp; scenery.</div>
-        </label>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="label"><span class="num">02</span> Zip of images</label>
-      <div class="dropzone" id="dropzone">
-        <input type="file" id="fileInput" accept=".zip" hidden>
-        <div id="dzEmpty">
-          <div class="dz-icon">↑</div>
-          <div class="dz-text">Drop a zip here, or click to browse</div>
-          <div class="dz-hint">.webp · .jpg · .png · filenames become SKUs</div>
-        </div>
-        <div id="dzFilled" class="dz-file" style="display:none">
-          <div>
-            <div class="dz-filename" id="fileName"></div>
-            <div class="dz-size" id="fileSize"></div>
-          </div>
-          <button type="button" class="dz-remove" id="removeBtn">Remove</button>
-        </div>
-      </div>
-    </div>
-
-    <button type="submit" class="submit" id="submitBtn" disabled>
-      <span id="submitText">Extract colors</span>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="batch" role="tab">
+      <span class="tnum">01</span>Batch
     </button>
+    <button class="tab" data-tab="calibrate" role="tab">
+      <span class="tnum">02</span>Calibrate
+    </button>
+  </nav>
 
-    <div class="status" id="status">
-      <div class="status-title" id="statusTitle"></div>
-      <div class="status-msg" id="statusMsg"></div>
+  <!-- ============ BATCH PANEL ============ -->
+  <section class="panel active" id="panel-batch" role="tabpanel">
+    <p class="intro">
+      Upload a <strong>zip of product images</strong> — named by SKU — and receive a clean xlsx
+      with the canonical color name, hex code, and parent color for each item.
+    </p>
+
+    <form id="batchForm" class="card">
+      <div class="field">
+        <label class="label"><span class="num">01</span> Product type</label>
+        <div class="options" id="batchModeOptions">
+          <label class="option selected" data-value="garment">
+            <input type="radio" name="batch_mode" value="garment" checked>
+            <div class="option-name">Garment</div>
+            <div class="desc">Skirts, dresses, tops, co-ords. Center-sampled.</div>
+          </label>
+          <label class="option" data-value="footwear">
+            <input type="radio" name="batch_mode" value="footwear">
+            <div class="option-name">Footwear</div>
+            <div class="desc">Shoes, boots, sandals. Handles skin &amp; scenery.</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label"><span class="num">02</span> Zip of images</label>
+        <div class="dropzone" id="batchDropzone">
+          <input type="file" id="batchFileInput" accept=".zip" hidden>
+          <div id="batchDzEmpty">
+            <div class="dz-icon">↑</div>
+            <div class="dz-text">Drop a zip here, or click to browse</div>
+            <div class="dz-hint">.webp · .jpg · .png · filenames become SKUs</div>
+          </div>
+          <div id="batchDzFilled" class="dz-file" style="display:none">
+            <div>
+              <div class="dz-filename" id="batchFileName"></div>
+              <div class="dz-size" id="batchFileSize"></div>
+            </div>
+            <button type="button" class="dz-remove" id="batchRemoveBtn">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn full" id="batchSubmitBtn" disabled>
+        <span id="batchSubmitText">Extract colors</span>
+      </button>
+
+      <div class="status" id="batchStatus">
+        <div class="status-title" id="batchStatusTitle"></div>
+        <div class="status-msg" id="batchStatusMsg"></div>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ CALIBRATE PANEL ============ -->
+  <section class="panel" id="panel-calibrate" role="tabpanel">
+    <p class="intro">
+      Upload or paste <strong>a single garment image</strong> to see its predicted color. If
+      the prediction is off, use the picker to specify the correct color — the model
+      learns from your correction and applies it to future similar colors.
+    </p>
+
+    <div class="card">
+      <div class="field">
+        <label class="label"><span class="num">01</span> Product type</label>
+        <div class="options" id="calibModeOptions">
+          <label class="option selected" data-value="garment">
+            <input type="radio" name="calib_mode" value="garment" checked>
+            <div class="option-name">Garment</div>
+            <div class="desc">Skirts, dresses, tops, co-ords.</div>
+          </label>
+          <label class="option" data-value="footwear">
+            <input type="radio" name="calib_mode" value="footwear">
+            <div class="option-name">Footwear</div>
+            <div class="desc">Shoes, boots, sandals.</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label"><span class="num">02</span> Image</label>
+        <div class="dropzone" id="calibDropzone">
+          <input type="file" id="calibFileInput" accept="image/*" hidden>
+          <div id="calibDzEmpty">
+            <div class="dz-icon">↑</div>
+            <div class="dz-text">Drop an image, click to browse, or paste below</div>
+            <div class="dz-hint">.webp · .jpg · .png · max 10MB</div>
+          </div>
+          <div id="calibDzFilled" class="dz-file" style="display:none">
+            <div>
+              <div class="dz-filename" id="calibFileName"></div>
+              <div class="dz-size" id="calibFileSize"></div>
+            </div>
+            <button type="button" class="dz-remove" id="calibRemoveBtn">Remove</button>
+          </div>
+        </div>
+        <div class="paste-zone" id="pasteZone" tabindex="0" contenteditable="true" aria-label="Paste image here">
+          PASTE AN IMAGE HERE (CTRL+V)
+        </div>
+      </div>
+
+      <div class="status" id="calibStatus">
+        <div class="status-title" id="calibStatusTitle"></div>
+        <div class="status-msg" id="calibStatusMsg"></div>
+      </div>
     </div>
-  </form>
+
+    <!-- Result card (shown after classify) -->
+    <div class="card" id="resultCard" style="display:none">
+      <label class="label"><span class="num">03</span> Result</label>
+      <div class="result-grid">
+        <div>
+          <div class="preview-box" id="previewBox">
+            <div class="empty">no image yet</div>
+          </div>
+        </div>
+        <div class="swatch-block">
+          <div class="swatch" id="resultSwatch">
+            <span class="hex-tag" id="resultHexTag">—</span>
+          </div>
+          <div class="meta-grid">
+            <div class="k">Color</div>
+            <div class="v" id="resultName">—<span id="fromCorrectionTag"></span></div>
+            <div class="k">Family</div>
+            <div class="v" id="resultParent">—</div>
+            <div class="k">Hex</div>
+            <div class="v mono" id="resultHex">—</div>
+            <div class="k">Sampled</div>
+            <div class="v mono" id="resultSampledHex">—</div>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn btn-secondary" id="confirmBtn">✓ Looks right</button>
+            <button type="button" class="btn" id="correctBtn">✕ Correct color</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Correction form -->
+      <div class="correct-block" id="correctBlock">
+        <label class="label"><span class="num">04</span> Pick the correct color</label>
+        <div class="correct-grid">
+          <div class="row-label">Pick</div>
+          <input type="color" id="pickerInput" value="#888888">
+          <div class="picked-hex-display" id="pickedHexDisplay">#888888</div>
+
+          <div class="row-label">Name (optional)</div>
+          <input type="text" id="correctNameInput" placeholder="e.g. Midnight Blue (leave blank for Custom #...)" />
+          <div></div>
+
+          <div class="row-label">Family (optional)</div>
+          <input type="text" id="correctFamilyInput" placeholder="e.g. Blue (auto-detected if blank)" />
+          <div></div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-secondary" id="cancelCorrectBtn">Cancel</button>
+          <button type="button" class="btn" id="submitCorrectBtn">Submit correction</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats & corrections management -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat">PALETTE: <strong id="statTotalPalette">—</strong></div>
+      <div class="stat">CORRECTIONS: <strong id="statAnchors">—</strong></div>
+      <div class="stat">PINNED IMAGES: <strong id="statOverrides">—</strong></div>
+    </div>
+    <div class="footer-actions">
+      <a href="/corrections/export" id="exportBtn">Export corrections.json</a>
+      <button type="button" id="resetBtn">Reset all corrections</button>
+    </div>
+  </section>
 
   <footer>
     <span>— Made with Python + FastAPI —</span>
@@ -395,164 +781,378 @@
 </div>
 
 <script>
-  const dropzone = document.getElementById('dropzone');
-  const fileInput = document.getElementById('fileInput');
-  const dzEmpty = document.getElementById('dzEmpty');
-  const dzFilled = document.getElementById('dzFilled');
-  const fileName = document.getElementById('fileName');
-  const fileSize = document.getElementById('fileSize');
-  const removeBtn = document.getElementById('removeBtn');
-  const submitBtn = document.getElementById('submitBtn');
-  const submitText = document.getElementById('submitText');
-  const form = document.getElementById('form');
-  const status = document.getElementById('status');
-  const statusTitle = document.getElementById('statusTitle');
-  const statusMsg = document.getElementById('statusMsg');
-  const healthText = document.getElementById('healthText');
+'use strict';
 
-  let selectedFile = null;
+// ---------- Tab switching ----------
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'calibrate') refreshStats();
+  });
+});
 
-  // Mode selector
-  document.querySelectorAll('.option').forEach(opt => {
+// ---------- Mode option pickers (shared logic) ----------
+function setupOptionPicker(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.querySelectorAll('.option').forEach(opt => {
     opt.addEventListener('click', (e) => {
       if (e.target.tagName === 'INPUT') return;
-      document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+      container.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
       opt.classList.add('selected');
       opt.querySelector('input').checked = true;
     });
   });
+}
+setupOptionPicker('batchModeOptions');
+setupOptionPicker('calibModeOptions');
 
-  // File picker
-  dropzone.addEventListener('click', (e) => {
+// ---------- Generic dropzone helpers ----------
+function setupDropzone({ zoneEl, inputEl, emptyEl, filledEl, fileNameEl, fileSizeEl, removeBtn,
+                         accept, onFile, onRemove }) {
+  let selected = null;
+
+  function reset() {
+    selected = null;
+    inputEl.value = '';
+    emptyEl.style.display = '';
+    filledEl.style.display = 'none';
+    zoneEl.classList.remove('has-file');
+    if (onRemove) onRemove();
+  }
+  function showFile(file) {
+    selected = file;
+    fileNameEl.textContent = file.name || 'pasted-image';
+    fileSizeEl.textContent = formatSize(file.size);
+    emptyEl.style.display = 'none';
+    filledEl.style.display = 'flex';
+    zoneEl.classList.add('has-file');
+    if (onFile) onFile(file);
+  }
+
+  zoneEl.addEventListener('click', (e) => {
     if (e.target === removeBtn) return;
-    if (!selectedFile) fileInput.click();
+    if (!selected) inputEl.click();
   });
-  fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length) handleFile(e.target.files[0]);
+  inputEl.addEventListener('change', (e) => {
+    if (e.target.files.length) showFile(e.target.files[0]);
   });
+  ['dragenter', 'dragover'].forEach(ev =>
+    zoneEl.addEventListener(ev, (e) => { e.preventDefault(); zoneEl.classList.add('dragover'); })
+  );
+  ['dragleave', 'drop'].forEach(ev =>
+    zoneEl.addEventListener(ev, (e) => { e.preventDefault(); zoneEl.classList.remove('dragover'); })
+  );
+  zoneEl.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files.length) showFile(e.dataTransfer.files[0]);
+  });
+  removeBtn.addEventListener('click', (e) => { e.stopPropagation(); reset(); });
 
-  // Drag/drop
-  ['dragenter', 'dragover'].forEach(ev => {
-    dropzone.addEventListener(ev, (e) => {
-      e.preventDefault();
-      dropzone.classList.add('dragover');
-    });
-  });
-  ['dragleave', 'drop'].forEach(ev => {
-    dropzone.addEventListener(ev, (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('dragover');
-    });
-  });
-  dropzone.addEventListener('drop', (e) => {
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-  });
+  return {
+    showFile,
+    reset,
+    getFile: () => selected,
+  };
+}
 
-  removeBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    selectedFile = null;
-    fileInput.value = '';
-    dzEmpty.style.display = '';
-    dzFilled.style.display = 'none';
-    dropzone.classList.remove('has-file');
-    submitBtn.disabled = true;
-  });
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
 
-  function handleFile(file) {
+function showStatus(idTitle, idMsg, idContainer, type, title, msg) {
+  document.getElementById(idContainer).className = 'status show ' + (type || '');
+  document.getElementById(idTitle).textContent = title;
+  document.getElementById(idMsg).textContent = msg;
+}
+function hideStatus(idContainer) {
+  document.getElementById(idContainer).className = 'status';
+}
+
+// ============================================================
+// BATCH TAB
+// ============================================================
+const batchSubmit = document.getElementById('batchSubmitBtn');
+const batchSubmitText = document.getElementById('batchSubmitText');
+
+const batchDz = setupDropzone({
+  zoneEl: document.getElementById('batchDropzone'),
+  inputEl: document.getElementById('batchFileInput'),
+  emptyEl: document.getElementById('batchDzEmpty'),
+  filledEl: document.getElementById('batchDzFilled'),
+  fileNameEl: document.getElementById('batchFileName'),
+  fileSizeEl: document.getElementById('batchFileSize'),
+  removeBtn: document.getElementById('batchRemoveBtn'),
+  onFile: (file) => {
     if (!file.name.toLowerCase().endsWith('.zip')) {
-      showStatus('error', 'Invalid file', 'Please upload a .zip file.');
+      showStatus('batchStatusTitle', 'batchStatusMsg', 'batchStatus', 'error', 'Invalid file', 'Please upload a .zip');
+      batchDz.reset();
       return;
     }
-    selectedFile = file;
-    fileName.textContent = file.name;
-    fileSize.textContent = formatSize(file.size);
-    dzEmpty.style.display = 'none';
-    dzFilled.style.display = 'flex';
-    dropzone.classList.add('has-file');
-    submitBtn.disabled = false;
-    hideStatus();
-  }
+    batchSubmit.disabled = false;
+    hideStatus('batchStatus');
+  },
+  onRemove: () => { batchSubmit.disabled = true; },
+});
 
-  function formatSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-  }
+document.getElementById('batchForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const file = batchDz.getFile();
+  if (!file) return;
+  const mode = document.querySelector('input[name="batch_mode"]:checked').value;
 
-  function showStatus(type, title, msg) {
-    status.className = 'status show ' + type;
-    statusTitle.textContent = title;
-    statusMsg.textContent = msg;
-  }
-  function hideStatus() {
-    status.className = 'status';
-  }
+  batchSubmit.disabled = true;
+  batchSubmitText.innerHTML = '<span class="spinner"></span>Processing…';
+  showStatus('batchStatusTitle', 'batchStatusMsg', 'batchStatus', '', 'Working',
+    'Extracting colors from each image. Larger zips take longer.');
 
-  // Submit
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!selectedFile) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('mode', mode);
 
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-
-    submitBtn.disabled = true;
-    submitText.innerHTML = '<span class="spinner"></span>Processing…';
-    showStatus('', 'Working', 'Extracting colors from each image. Larger zips take longer.');
-
-    const fd = new FormData();
-    fd.append('file', selectedFile);
-    fd.append('mode', mode);
-
-    try {
-      const res = await fetch('/extract', { method: 'POST', body: fd });
-
-      if (!res.ok) {
-        let errMsg = 'Something went wrong';
-        try {
-          const data = await res.json();
-          errMsg = data.detail || errMsg;
-        } catch {}
-        throw new Error(errMsg);
-      }
-
-      const processed = res.headers.get('X-Processed-Count') || '?';
-      const errors = res.headers.get('X-Error-Count') || '0';
-
-      const rawBlob = await res.blob();
-      // Force correct MIME type for xlsx
-      const blob = new Blob([rawBlob], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      // Build filename from uploaded zip name
-      const baseName = selectedFile.name.replace(/\.zip$/i, '');
-      const disposition = res.headers.get('Content-Disposition') || '';
-      const match = disposition.match(/filename="?([^"]+)"?/);
-      a.download = match ? match[1] : `${baseName}_colors.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-
-      showStatus('success', 'Done',
-        `Processed ${processed} image(s)${errors !== '0' ? ` · ${errors} error(s)` : ''}. Download started.`);
-
-    } catch (err) {
-      showStatus('error', 'Failed', err.message || String(err));
-    } finally {
-      submitBtn.disabled = false;
-      submitText.textContent = 'Extract colors';
+  try {
+    const res = await fetch('/extract', { method: 'POST', body: fd });
+    if (!res.ok) {
+      let msg = 'Something went wrong';
+      try { msg = (await res.json()).detail || msg; } catch {}
+      throw new Error(msg);
     }
-  });
+    const processed = res.headers.get('X-Processed-Count') || '?';
+    const errors = res.headers.get('X-Error-Count') || '0';
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const m = (res.headers.get('Content-Disposition') || '').match(/filename="?([^"]+)"?/);
+    a.download = m ? m[1] : 'colors.xlsx';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showStatus('batchStatusTitle', 'batchStatusMsg', 'batchStatus', 'success', 'Done',
+      `Processed ${processed} image(s)${errors !== '0' ? ` · ${errors} error(s)` : ''}. Download started.`);
+  } catch (err) {
+    showStatus('batchStatusTitle', 'batchStatusMsg', 'batchStatus', 'error', 'Failed', err.message || String(err));
+  } finally {
+    batchSubmit.disabled = false;
+    batchSubmitText.textContent = 'Extract colors';
+  }
+});
 
-  // Health ping
-  fetch('/health').then(r => r.ok ? r.json() : null).then(d => {
-    healthText.textContent = d && d.status === 'ok' ? 'Server: online' : 'Server: offline';
-  }).catch(() => {
-    healthText.textContent = 'Server: offline';
+// ============================================================
+// CALIBRATE TAB
+// ============================================================
+const resultCard = document.getElementById('resultCard');
+const correctBlock = document.getElementById('correctBlock');
+let currentImageDataURL = null;
+let currentResult = null;
+
+async function classifyCurrentImage() {
+  const file = calibDz.getFile();
+  if (!file) return;
+  const mode = document.querySelector('input[name="calib_mode"]:checked').value;
+
+  showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', '', 'Classifying',
+    'Reading image, sampling color, finding nearest match…');
+
+  // Read for preview
+  currentImageDataURL = await readAsDataURL(file);
+  document.getElementById('previewBox').innerHTML =
+    `<img src="${currentImageDataURL}" alt="preview">`;
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('mode', mode);
+    const res = await fetch('/classify-single', { method: 'POST', body: fd });
+    if (!res.ok) {
+      let msg = 'Failed to classify';
+      try { msg = (await res.json()).detail || msg; } catch {}
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    currentResult = data;
+    renderResult(data);
+    hideStatus('calibStatus');
+    resultCard.style.display = 'block';
+    correctBlock.classList.remove('show');
+    refreshStats();
+  } catch (err) {
+    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Failed', err.message || String(err));
+  }
+}
+
+function renderResult(d) {
+  document.getElementById('resultSwatch').style.background = d.hex;
+  document.getElementById('resultHexTag').textContent = d.hex;
+  document.getElementById('resultName').firstChild.nodeValue = d.name + ' ';
+  document.getElementById('fromCorrectionTag').innerHTML =
+    d.from_correction ? '<span class="from-correction-tag">Learned</span>' : '';
+  document.getElementById('resultParent').textContent = d.parent;
+  document.getElementById('resultHex').textContent = d.hex;
+  document.getElementById('resultSampledHex').textContent = d.sampled_hex;
+  document.getElementById('pickerInput').value = d.hex;
+  document.getElementById('pickedHexDisplay').textContent = d.hex;
+  document.getElementById('correctNameInput').value = '';
+  document.getElementById('correctFamilyInput').value = '';
+}
+
+function readAsDataURL(blobOrFile) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(blobOrFile);
   });
+}
+
+const calibDz = setupDropzone({
+  zoneEl: document.getElementById('calibDropzone'),
+  inputEl: document.getElementById('calibFileInput'),
+  emptyEl: document.getElementById('calibDzEmpty'),
+  filledEl: document.getElementById('calibDzFilled'),
+  fileNameEl: document.getElementById('calibFileName'),
+  fileSizeEl: document.getElementById('calibFileSize'),
+  removeBtn: document.getElementById('calibRemoveBtn'),
+  onFile: (file) => {
+    if (!file.type.startsWith('image/')) {
+      showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Invalid file', 'Please upload an image');
+      calibDz.reset();
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Too large', 'Image must be under 10MB');
+      calibDz.reset();
+      return;
+    }
+    classifyCurrentImage();
+  },
+  onRemove: () => {
+    resultCard.style.display = 'none';
+    currentImageDataURL = null;
+    currentResult = null;
+  },
+});
+
+// Paste-image handling
+const pasteZone = document.getElementById('pasteZone');
+pasteZone.addEventListener('paste', async (e) => {
+  e.preventDefault();
+  const items = (e.clipboardData || window.clipboardData).items;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const blob = item.getAsFile();
+      // Wrap in a File-like with a name
+      const file = new File([blob], 'pasted-image.' + (blob.type.split('/')[1] || 'png'), { type: blob.type });
+      pasteZone.textContent = 'PASTE AN IMAGE HERE (CTRL+V)';
+      calibDz.showFile(file);
+      return;
+    }
+  }
+  // No image found
+  pasteZone.textContent = 'NO IMAGE IN CLIPBOARD — TRY COPYING AN IMAGE FIRST';
+  setTimeout(() => { pasteZone.textContent = 'PASTE AN IMAGE HERE (CTRL+V)'; }, 2200);
+});
+// Prevent text being typed into the paste zone
+pasteZone.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) return;
+  e.preventDefault();
+});
+
+// Confirm / Correct buttons
+document.getElementById('confirmBtn').addEventListener('click', () => {
+  showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'success', 'Confirmed', 'Glad it looked right.');
+});
+document.getElementById('correctBtn').addEventListener('click', () => {
+  correctBlock.classList.add('show');
+  document.getElementById('pickerInput').focus();
+});
+document.getElementById('cancelCorrectBtn').addEventListener('click', () => {
+  correctBlock.classList.remove('show');
+});
+document.getElementById('pickerInput').addEventListener('input', (e) => {
+  document.getElementById('pickedHexDisplay').textContent = e.target.value.toUpperCase();
+});
+
+// Submit correction
+document.getElementById('submitCorrectBtn').addEventListener('click', async () => {
+  if (!currentResult) return;
+  const hex = document.getElementById('pickerInput').value;
+  const name = document.getElementById('correctNameInput').value.trim();
+  const family = document.getElementById('correctFamilyInput').value.trim();
+
+  showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', '', 'Saving', 'Recording correction…');
+
+  try {
+    const res = await fetch('/correct', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_hash: currentResult.image_hash,
+        sampled_rgb: currentResult.sampled_rgb,
+        corrected_hex: hex,
+        corrected_name: name || null,
+        corrected_family: family || null,
+      }),
+    });
+    if (!res.ok) {
+      let msg = 'Failed to save';
+      try { msg = (await res.json()).detail || msg; } catch {}
+      throw new Error(msg);
+    }
+    const data = await res.json();
+    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'success',
+      'Saved', `Stored as "${data.saved.name}" (${data.saved.parent}). The model will use this for similar colors.`);
+    correctBlock.classList.remove('show');
+
+    // Re-classify so the result shows the learned answer
+    if (currentImageDataURL) {
+      // Update the displayed result manually with the saved correction
+      currentResult.name = data.saved.name;
+      currentResult.hex = data.saved.hex;
+      currentResult.parent = data.saved.parent;
+      currentResult.from_correction = true;
+      renderResult(currentResult);
+    }
+    refreshStats();
+  } catch (err) {
+    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Failed', err.message || String(err));
+  }
+});
+
+// Reset corrections
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  if (!confirm('Wipe all corrections? This cannot be undone.')) return;
+  try {
+    const res = await fetch('/corrections/reset', { method: 'POST' });
+    if (!res.ok) throw new Error('Reset failed');
+    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'success', 'Reset', 'All corrections cleared.');
+    refreshStats();
+  } catch (err) {
+    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Failed', err.message);
+  }
+});
+
+// Stats
+async function refreshStats() {
+  try {
+    const res = await fetch('/corrections/stats');
+    if (!res.ok) return;
+    const d = await res.json();
+    document.getElementById('statTotalPalette').textContent = d.total_palette_size;
+    document.getElementById('statAnchors').textContent = d.user_anchors_count;
+    document.getElementById('statOverrides').textContent = d.image_overrides_count;
+  } catch {}
+}
+refreshStats();
+
+// Health ping
+fetch('/health').then(r => r.ok ? r.json() : null).then(d => {
+  document.getElementById('healthText').textContent =
+    d && d.status === 'ok' ? 'Server: online' : 'Server: offline';
+}).catch(() => { document.getElementById('healthText').textContent = 'Server: offline'; });
 </script>
 </body>
 </html>
