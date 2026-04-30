@@ -18,7 +18,7 @@
     --shadow: 0 1px 0 rgba(26,26,26,0.04), 0 8px 24px rgba(26,26,26,0.06);
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
+  html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; }
   body {
     font-family: 'Fraunces', Georgia, serif;
     background: var(--bg);
@@ -26,18 +26,45 @@
     font-size: 16px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
     background-image: radial-gradient(circle at 1px 1px, rgba(26,26,26,0.045) 1px, transparent 0);
     background-size: 28px 28px;
   }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 56px 32px 80px; }
+  .dashboard { display: flex; height: 100vh; width: 100vw; }
+  .left-panel {
+    flex: 0 0 520px;
+    height: 100%;
+    overflow-y: auto;
+    border-right: 1px solid var(--rule);
+    padding: 32px 32px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .right-panel {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+    padding: 40px 48px;
+    background: rgba(254, 252, 247, 0.4);
+  }
+  .panel-right { display: none; }
+  .panel-right.active { display: block; }
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; color: var(--muted); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  }
+  @media (max-width: 900px) {
+    .dashboard { flex-direction: column; overflow-y: auto; height: auto; }
+    .left-panel, .right-panel { flex: none; width: 100%; height: auto; overflow: visible; }
+    .left-panel { border-right: none; border-bottom: 1px solid var(--rule); }
+    html, body { height: auto; overflow: visible; }
+  }
 
   header {
     border-bottom: 1px solid var(--rule);
-    padding-bottom: 24px;
-    margin-bottom: 36px;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
     display: flex; align-items: baseline; justify-content: space-between;
-    gap: 24px; flex-wrap: wrap;
+    gap: 16px; flex-wrap: wrap;
   }
   .brand {
     font-family: 'Fraunces', serif;
@@ -59,7 +86,7 @@
   .tabs {
     display: flex; gap: 0;
     border-bottom: 1px solid var(--rule);
-    margin-bottom: 36px;
+    margin-bottom: 24px;
   }
   .tab {
     padding: 14px 24px 12px;
@@ -83,8 +110,8 @@
   .panel.active { display: block; }
 
   .intro {
-    font-size: 18px; line-height: 1.6;
-    max-width: 60ch; margin-bottom: 36px;
+    font-size: 14.5px; line-height: 1.5;
+    max-width: 60ch; margin-bottom: 24px;
   }
   .intro strong {
     font-weight: 500;
@@ -96,12 +123,12 @@
     background: var(--card);
     border: 1px solid var(--rule);
     border-radius: 4px;
-    padding: 32px;
+    padding: 24px;
     box-shadow: var(--shadow);
   }
-  .card + .card { margin-top: 20px; }
+  .card + .card { margin-top: 16px; }
 
-  .field { margin-bottom: 24px; }
+  .field { margin-bottom: 20px; }
   .field:last-of-type { margin-bottom: 0; }
 
   .label {
@@ -132,12 +159,12 @@
   .dropzone {
     border: 1.5px dashed var(--rule);
     border-radius: 3px;
-    padding: 36px 24px;
+    padding: 24px 20px;
     text-align: center;
     background: #fff;
     transition: all 0.18s ease;
     cursor: pointer;
-    min-height: 120px;
+    min-height: 100px;
   }
   .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: #FFF9F5; }
   .dropzone.has-file { border-color: var(--ink); border-style: solid; text-align: left; }
@@ -186,9 +213,9 @@
   .btn-row .btn { flex: 1; min-width: 120px; }
 
   .status {
-    margin-top: 24px; padding: 16px 20px;
+    margin-top: 16px; padding: 14px 16px;
     border-left: 2px solid var(--accent); background: #FFF9F5;
-    display: none; font-size: 15px;
+    display: none; font-size: 14px;
   }
   .status.show { display: block; }
   .status.error { border-left-color: #C13030; background: #FFF0F0; }
@@ -419,11 +446,11 @@
   }
 
   footer {
-    margin-top: 64px; padding-top: 24px;
+    margin-top: auto; padding-top: 16px;
     border-top: 1px solid var(--rule);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
-    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    font-size: 10px; letter-spacing: 0.08em; color: var(--muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
   }
 
   @media (max-width: 600px) {
@@ -436,7 +463,8 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="dashboard">
+  <div class="left-panel">
 
   <header>
     <div class="brand">Chro<em>matic</em></div>
@@ -444,16 +472,16 @@
   </header>
 
   <nav class="tabs" role="tablist">
-    <button class="tab active" data-tab="batch" role="tab">
-      <span class="tnum">01</span>Batch
+    <button class="tab active" data-tab="calibrate" role="tab">
+      <span class="tnum">01</span>Calibrate
     </button>
-    <button class="tab" data-tab="calibrate" role="tab">
-      <span class="tnum">02</span>Calibrate
+    <button class="tab" data-tab="batch" role="tab">
+      <span class="tnum">02</span>Batch
     </button>
   </nav>
 
   <!-- ============ BATCH PANEL ============ -->
-  <section class="panel active" id="panel-batch" role="tabpanel">
+  <section class="panel" id="panel-batch-left" role="tabpanel">
     <p class="intro">
       Upload a <strong>zip of product images</strong> — named by SKU — and receive a clean xlsx
       with base color, printed color, and parent groupings for each item. Multi-color prints
@@ -508,7 +536,7 @@
   </section>
 
   <!-- ============ CALIBRATE PANEL ============ -->
-  <section class="panel" id="panel-calibrate" role="tabpanel">
+  <section class="panel active" id="panel-calibrate-left" role="tabpanel">
     <p class="intro">
       Upload or paste <strong>a single garment image</strong> to see its predicted color(s).
       Multi-color products (e.g. a printed dress) show as base + print. Correct any color
@@ -560,30 +588,6 @@
       </div>
     </div>
 
-    <div class="card" id="resultCard" style="display:none">
-      <label class="label"><span class="num">03</span> Result</label>
-      <div class="result-grid">
-        <div>
-          <div class="preview-box" id="previewBox">
-            <div class="empty">no image yet</div>
-          </div>
-        </div>
-        <div>
-          <div id="multiBannerWrap"></div>
-          <div class="colors-stack" id="colorsStack"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stats-row" id="statsRow">
-      <div class="stat">PALETTE: <strong id="statTotalPalette">—</strong></div>
-      <div class="stat">CORRECTIONS: <strong id="statAnchors">—</strong></div>
-      <div class="stat">PINNED IMAGES: <strong id="statOverrides">—</strong></div>
-    </div>
-    <div class="footer-actions">
-      <a href="/corrections/export" id="exportBtn">Export corrections.json</a>
-      <button type="button" id="resetBtn">Reset all corrections</button>
-    </div>
   </section>
 
   <footer>
@@ -591,7 +595,46 @@
     <span id="healthText">Checking server…</span>
   </footer>
 
-</div>
+  </div> <!-- End left-panel -->
+
+  <div class="right-panel">
+    <!-- CALIBRATE RIGHT -->
+    <section class="panel-right active" id="panel-calibrate-right">
+      <div class="card" id="resultCard" style="display:none">
+        <label class="label"><span class="num">03</span> Result</label>
+        <div class="result-grid">
+          <div>
+            <div class="preview-box" id="previewBox">
+              <div class="empty">no image yet</div>
+            </div>
+          </div>
+          <div>
+            <div id="multiBannerWrap"></div>
+            <div class="colors-stack" id="colorsStack"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row" id="statsRow">
+        <div class="stat">PALETTE: <strong id="statTotalPalette">—</strong></div>
+        <div class="stat">CORRECTIONS: <strong id="statAnchors">—</strong></div>
+        <div class="stat">PINNED IMAGES: <strong id="statOverrides">—</strong></div>
+      </div>
+      <div class="footer-actions">
+        <a href="/corrections/export" id="exportBtn">Export corrections.json</a>
+        <button type="button" id="resetBtn">Reset all corrections</button>
+      </div>
+    </section>
+
+    <!-- BATCH RIGHT -->
+    <section class="panel-right" id="panel-batch-right">
+      <div class="empty-state">
+        <div class="dz-icon">↓</div>
+        <div class="dz-text">Batch results will automatically download as an XLSX file</div>
+      </div>
+    </section>
+  </div> <!-- End right-panel -->
+</div> <!-- End dashboard -->
 
 <script>
 'use strict';
@@ -601,8 +644,10 @@ document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.panel-right').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab + '-left').classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab + '-right').classList.add('active');
     if (tab.dataset.tab === 'calibrate') refreshStats();
   });
 });
