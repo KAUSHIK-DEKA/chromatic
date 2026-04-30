@@ -48,8 +48,8 @@ from PIL import Image
 
 # ---------------- Tunable thresholds ----------------
 MAX_CLUSTERS = 3                # k for k-means
-MIN_SHARE_PCT = 0.04            # cluster must be >=4% of sampled pixels (catches sparse prints like florals)
-MERGE_THRESHOLD = 28.0          # Lab Delta E below which clusters are considered the same color (merges shadows/highlights into base)
+MIN_SHARE_PCT = 0.08            # cluster must be >=8% of sampled pixels (prevents solids from splitting into pseudo-colors)
+MERGE_THRESHOLD = 20.0          # Lab Delta E below which clusters are considered the same color
 KMEANS_ITERS = 12               # plenty for 3 centroids on a few thousand pixels
 KMEANS_SAMPLE_LIMIT = 5000      # cap pixels fed into k-means for speed
 ANCHOR_INFLUENCE_THRESHOLD = 30.0  # Lab Delta E within which a user anchor wins over base palette
@@ -482,6 +482,79 @@ def _merge_close_clusters(centroids_rgb, shares):
 
 
 # ---------------- High-level extraction ----------------
+def _segment_foreground_grabcut(arr, target_w=400):
+    """Use OpenCV GrabCut to extract foreground (product) pixels.
+
+    Returns: (fg_pixels: np.ndarray (N, 3), bg_centroid: tuple | None, ok: bool)
+
+    ok=False indicates GrabCut produced a degenerate mask (too small, too
+    large, or empty) — caller should fall back to region sampling.
+
+    We downscale the image to target_w wide for speed (GrabCut is O(n) in
+    pixels and 8x downscale = 64x faster). The returned fg_pixels are
+    sampled from the downscaled image, which is fine for color clustering.
+    """
+    try:
+        import cv2  # imported lazily so module loads even if cv2 missing
+    except ImportError:
+        return None, None, False
+
+    h, w, _ = arr.shape
+    if w <= 0 or h <= 0:
+        return None, None, False
+
+    scale = target_w / max(w, 1)
+    new_w = target_w
+    new_h = max(1, int(h * scale))
+    small = cv2.resize(arr, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+    # Initial seed rectangle: central 70% width, 90% height.
+    margin_x = int(new_w * 0.15)
+    margin_y = int(new_h * 0.05)
+    rect = (margin_x, margin_y, new_w - 2 * margin_x, new_h - 2 * margin_y)
+
+    mask = np.zeros((new_h, new_w), np.uint8)
+    bgd_model = np.zeros((1, 65), np.float64)
+    fgd_model = np.zeros((1, 65), np.float64)
+    try:
+        cv2.grabCut(
+            cv2.cvtColor(small, cv2.COLOR_RGB2BGR),
+            mask, rect, bgd_model, fgd_model,
+            5, cv2.GC_INIT_WITH_RECT,
+        )
+    except cv2.error:
+        return None, None, False
+
+    fg_mask = ((mask == 1) | (mask == 3)).astype(np.uint8)
+    fg_count = int(fg_mask.sum())
+    fg_frac = fg_count / max(fg_mask.size, 1)
+
+    # Reject degenerate masks: <3% (couldn't find product) or >92% (whole image is fg, no bg learned)
+    if fg_frac < 0.03 or fg_frac > 0.92:
+        return None, None, False
+
+    fg_pixels = small[fg_mask == 1].astype(int)
+    if len(fg_pixels) < 200:
+        return None, None, False
+
+    # Estimate bg color so we can strip leakage in fg_pixels
+    bg_mask = ((mask == 0) | (mask == 2)).astype(np.uint8)
+    bg_pixels = small[bg_mask == 1].astype(int)
+    bg_centroid = None
+    if len(bg_pixels) > 100:
+        bg_centroid = tuple(int(c) for c in np.median(bg_pixels, axis=0))
+        # Strip fg pixels that are close to bg color (gaps in mask, halos)
+        bg_arr = np.asarray(bg_centroid, dtype=int)
+        diff = np.abs(fg_pixels - bg_arr)
+        close_to_bg = (diff[:, 0] < 15) & (diff[:, 1] < 15) & (diff[:, 2] < 15)
+        fg_clean = fg_pixels[~close_to_bg]
+        # Only apply the strip if we still have enough pixels left
+        if len(fg_clean) > 500:
+            fg_pixels = fg_clean
+
+    return fg_pixels, bg_centroid, True
+
+
 def extract_colors(img_path_or_bytes, mode):
     """Extract one or more dominant colors from an image.
 
@@ -491,18 +564,27 @@ def extract_colors(img_path_or_bytes, mode):
     img = Image.open(img_path_or_bytes).convert("RGB")
     arr = np.array(img)
 
-    # Detect background colors from image edges (couch, carpet, paper, etc.)
-    # Skip for footwear since its sampling already excludes the upper image.
-    bg_colors = _detect_background_colors(arr) if mode == "garment" else None
+    used_grabcut = False
+    filtered = None
 
-    if mode == "footwear":
-        all_px = _sample_footwear_pixels(arr)
-    else:
-        all_px = _sample_garment_pixels(arr)
+    # For garment mode, try GrabCut first. It's the right tool for
+    # studio shots and lifestyle shots where bg dominates the frame.
+    if mode == "garment":
+        fg_pixels, bg_centroid, ok = _segment_foreground_grabcut(arr)
+        if ok:
+            filtered = fg_pixels
+            used_grabcut = True
 
-    filtered = _filter_pixels(all_px, mode, bg_colors=bg_colors)
+    # Fallback / footwear path: region sampling + heuristic background detection
+    if filtered is None:
+        bg_colors = _detect_background_colors(arr) if mode == "garment" else None
+        if mode == "footwear":
+            all_px = _sample_footwear_pixels(arr)
+        else:
+            all_px = _sample_garment_pixels(arr)
+        filtered = _filter_pixels(all_px, mode, bg_colors=bg_colors)
 
-    if len(filtered) == 0:
+    if filtered is None or len(filtered) == 0:
         return [{"centroid_rgb": (128, 128, 128), "share": 1.0}]
 
     # k-means on filtered
@@ -511,7 +593,6 @@ def extract_colors(img_path_or_bytes, mode):
     # Drop tiny clusters before merging
     keep = shares >= MIN_SHARE_PCT
     if keep.sum() == 0:
-        # Fallback: keep the largest
         idx = int(np.argmax(shares))
         centroids_rgb = centroids_rgb[idx:idx + 1]
         shares = shares[idx:idx + 1]
@@ -519,13 +600,11 @@ def extract_colors(img_path_or_bytes, mode):
         centroids_rgb = centroids_rgb[keep]
         shares = shares[keep]
 
-    # Merge perceptually-close clusters (e.g. shadowed-black + lit-black)
+    # Merge perceptually-close clusters (e.g. shadowed-base + lit-base)
     centroids_rgb, shares = _merge_close_clusters(centroids_rgb, shares)
 
-    # Renormalize shares
+    # Renormalize and sort
     shares = shares / shares.sum()
-
-    # Re-sort by share desc
     order = np.argsort(-shares)
     centroids_rgb = centroids_rgb[order]
     shares = shares[order]
