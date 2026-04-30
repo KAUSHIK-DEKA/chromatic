@@ -2,19 +2,20 @@
 FastAPI backend for Chromatic.
 
 Endpoints:
-  GET  /                       -> serve frontend (index.html)
+  GET  /                       -> serve frontend
   GET  /health                 -> {"status": "ok"}
 
-  Batch tool:
-  POST /extract                -> zip in, xlsx out
+  Batch:
+  POST /extract                -> zip in, xlsx out (Base + Printed columns)
 
-  Single-image + calibration tool:
-  POST /classify-single        -> one image (multipart OR base64), returns prediction
-  POST /correct                -> submit a correction; learns for future images
+  Single-image + calibration:
+  POST /classify-single        -> one image (multipart OR base64). Returns
+                                  full colors list with roles.
+  POST /correct                -> submit a correction for one color (role).
   GET  /corrections/export     -> download corrections.json
-  POST /corrections/import     -> upload a corrections.json (merge or replace)
+  POST /corrections/import     -> upload corrections.json (merge|replace)
   GET  /corrections/stats      -> counts
-  POST /corrections/reset      -> wipe all corrections
+  POST /corrections/reset      -> wipe all
 """
 import base64
 import io
@@ -45,12 +46,11 @@ from color_extractor import (
 app = FastAPI(title="Chromatic — Color Extractor")
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
-
 IMAGE_EXTS = {".webp", ".jpg", ".jpeg", ".png"}
-MAX_SINGLE_IMAGE_BYTES = 10 * 1024 * 1024  # 10 MB sanity cap
+MAX_SINGLE_IMAGE_BYTES = 10 * 1024 * 1024
 
 
-# ---------------- Static frontend ----------------
+# ---------------- Frontend ----------------
 @app.get("/")
 def serve_frontend():
     html_path = STATIC_DIR / "index.html"
@@ -68,9 +68,46 @@ def health():
     return {"status": "ok"}
 
 
-# ---------------- Batch extract (unchanged) ----------------
+# ---------------- Batch extract ----------------
+def _row_for_result(sku: str, result: dict):
+    """Build the xlsx row from a process_image result.
+
+    Schema:
+      SKU | Base Color | Base Color Code | Base Parent
+          | Printed Color | Printed Color Code | Printed Parent
+          | Multi
+    """
+    colors = result.get("colors", [])
+    is_multi = result.get("is_multi", False)
+
+    # Base column
+    if is_multi:
+        base_name = "Multi"
+        base_hex = ""
+        base_parent = "Multi"
+    else:
+        if colors:
+            base_name = colors[0]["name"]
+            base_hex = colors[0]["hex"]
+            base_parent = colors[0]["parent"]
+        else:
+            base_name = base_hex = base_parent = ""
+
+    # Printed column — second-most-dominant color, if any
+    if len(colors) >= 2:
+        print_name = colors[1]["name"]
+        print_hex = colors[1]["hex"]
+        print_parent = colors[1]["parent"]
+    else:
+        print_name = print_hex = print_parent = ""
+
+    multi_marker = "Multi" if is_multi else ""
+
+    return (sku, base_name, base_hex, base_parent, print_name, print_hex, print_parent, multi_marker)
+
+
 @app.post("/extract")
-async def extract_colors(
+async def extract_colors_endpoint(
     file: UploadFile = File(...),
     mode: Literal["garment", "footwear"] = Form("garment"),
 ):
@@ -113,18 +150,24 @@ async def extract_colors(
                     with zf.open(zip_path) as img_file:
                         raw = img_file.read()
                     result = process_image(io.BytesIO(raw), mode=mode, image_bytes=raw)
-                    rows.append((sku, result["name"], result["hex"], result["parent"]))
+                    rows.append(_row_for_result(sku, result))
                 except Exception as e:
-                    rows.append((sku, "ERROR", "", str(e)[:60]))
+                    rows.append((sku, "ERROR", "", str(e)[:60], "", "", "", ""))
                     errors.append(f"{sku}: {e}")
     except zipfile.BadZipFile:
         raise HTTPException(status_code=400, detail="Invalid or corrupted zip file")
 
+    # Build xlsx
     wb = Workbook()
     ws = wb.active
     ws.title = mode.capitalize()
 
-    headers = ["SKU", "Color", "Color Code", "Parent Color"]
+    headers = [
+        "SKU",
+        "Base Color", "Base Color Code", "Base Parent",
+        "Printed Color", "Printed Color Code", "Printed Parent",
+        "Multi",
+    ]
     header_font = Font(name="Arial", bold=True, color="FFFFFF", size=11)
     header_fill = PatternFill("solid", start_color="2F5597")
     header_align = Alignment(horizontal="center", vertical="center")
@@ -140,17 +183,17 @@ async def extract_colors(
         cell.alignment = header_align
         cell.border = border
 
-    for i, (sku, color, code, parent) in enumerate(rows, start=2):
-        for col, val in enumerate([sku, color, code, parent], start=1):
+    for i, row in enumerate(rows, start=2):
+        for col, val in enumerate(row, start=1):
             cell = ws.cell(row=i, column=col, value=val)
             cell.font = body_font
             cell.alignment = body_align
             cell.border = border
 
-    ws.column_dimensions["A"].width = 18
-    ws.column_dimensions["B"].width = 26
-    ws.column_dimensions["C"].width = 14
-    ws.column_dimensions["D"].width = 16
+    # Column widths
+    widths = [18, 22, 16, 18, 22, 16, 18, 8]
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[chr(ord("A") + i - 1)].width = w
     ws.freeze_panes = "A2"
 
     buf = io.BytesIO()
@@ -178,16 +221,12 @@ async def classify_single(
     image_b64: Optional[str] = Form(None),
     mode: Literal["garment", "footwear"] = Form("garment"),
 ):
-    """Classify a single image, given as either multipart upload OR base64 string.
-    Used by the calibration tab.
-    """
     if file is None and not image_b64:
         raise HTTPException(status_code=400, detail="Provide either a file or image_b64")
 
     if file is not None:
         raw = await file.read()
     else:
-        # image_b64 may be a data URL ("data:image/png;base64,....") or raw base64
         b64_clean = image_b64.split(",", 1)[1] if "," in image_b64 else image_b64
         try:
             raw = base64.b64decode(b64_clean)
@@ -214,6 +253,10 @@ class CorrectionRequest(BaseModel):
     corrected_hex: str
     corrected_name: Optional[str] = None
     corrected_family: Optional[str] = None
+    role: Optional[str] = None  # 'base' | 'print' | 'print2' (optional)
+    # Full colors list (with the corrected role substituted) for pinning the
+    # whole image. Omit to skip image-hash override.
+    full_colors_for_pin: Optional[list] = None
 
 
 _HEX_RE = re.compile(r"^#?[0-9A-Fa-f]{6}$")
@@ -221,9 +264,6 @@ _HEX_RE = re.compile(r"^#?[0-9A-Fa-f]{6}$")
 
 @app.post("/correct")
 async def correct(req: CorrectionRequest):
-    """Submit a correction. The model learns from this immediately —
-    next request whose extracted RGB is near `sampled_rgb` will be
-    classified using `corrected_name`."""
     if not _HEX_RE.match(req.corrected_hex):
         raise HTTPException(status_code=400, detail="corrected_hex must be a 6-digit hex color")
     try:
@@ -242,13 +282,14 @@ async def correct(req: CorrectionRequest):
         corrected_hex=req.corrected_hex,
         corrected_name=name,
         corrected_family=family,
+        role=req.role,
+        full_colors_for_pin=req.full_colors_for_pin,
     )
     return {"ok": True, "saved": saved, "stats": get_corrections_stats()}
 
 
 @app.get("/corrections/export")
 def export_corrections():
-    """Download corrections.json."""
     snapshot = get_corrections_snapshot()
     buf = io.BytesIO(json.dumps(snapshot, indent=2).encode("utf-8"))
     return StreamingResponse(

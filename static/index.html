@@ -17,10 +17,8 @@
     --card: #FEFCF7;
     --shadow: 0 1px 0 rgba(26,26,26,0.04), 0 8px 24px rgba(26,26,26,0.06);
   }
-
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-
   body {
     font-family: 'Fraunces', Georgia, serif;
     background: var(--bg);
@@ -32,23 +30,14 @@
     background-image: radial-gradient(circle at 1px 1px, rgba(26,26,26,0.045) 1px, transparent 0);
     background-size: 28px 28px;
   }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 56px 32px 80px; }
 
-  .wrap {
-    max-width: 880px;
-    margin: 0 auto;
-    padding: 56px 32px 80px;
-  }
-
-  /* Header */
   header {
     border-bottom: 1px solid var(--rule);
     padding-bottom: 24px;
     margin-bottom: 36px;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 24px;
-    flex-wrap: wrap;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
   }
   .brand {
     font-family: 'Fraunces', serif;
@@ -58,11 +47,7 @@
     font-variation-settings: "opsz" 144;
     line-height: 1;
   }
-  .brand em {
-    font-style: italic;
-    color: var(--accent);
-    font-weight: 400;
-  }
+  .brand em { font-style: italic; color: var(--accent); font-weight: 400; }
   .tagline {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
@@ -71,50 +56,35 @@
     color: var(--muted);
   }
 
-  /* Tabs */
   .tabs {
-    display: flex;
-    gap: 0;
+    display: flex; gap: 0;
     border-bottom: 1px solid var(--rule);
     margin-bottom: 36px;
   }
   .tab {
     padding: 14px 24px 12px;
-    cursor: pointer;
-    background: none;
-    border: none;
+    cursor: pointer; background: none; border: none;
     border-bottom: 2px solid transparent;
     font-family: 'Fraunces', serif;
-    font-size: 18px;
-    font-weight: 500;
+    font-size: 18px; font-weight: 500;
     color: var(--muted);
     transition: all 0.15s;
     margin-bottom: -1px;
   }
   .tab:hover { color: var(--ink); }
-  .tab.active {
-    color: var(--ink);
-    border-bottom-color: var(--accent);
-  }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
   .tab .tnum {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    margin-right: 8px;
-    color: var(--muted);
-    vertical-align: middle;
+    font-size: 10px; letter-spacing: 0.18em;
+    margin-right: 8px; color: var(--muted); vertical-align: middle;
   }
 
   .panel { display: none; }
   .panel.active { display: block; }
 
-  /* Intro */
   .intro {
-    font-size: 18px;
-    line-height: 1.6;
-    max-width: 60ch;
-    margin-bottom: 36px;
-    color: var(--ink);
+    font-size: 18px; line-height: 1.6;
+    max-width: 60ch; margin-bottom: 36px;
   }
   .intro strong {
     font-weight: 500;
@@ -122,7 +92,6 @@
     padding: 0 2px;
   }
 
-  /* Card */
   .card {
     background: var(--card);
     border: 1px solid var(--rule);
@@ -138,24 +107,12 @@
   .label {
     display: block;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: var(--muted);
-    margin-bottom: 12px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em;
+    color: var(--muted); margin-bottom: 12px;
   }
-  .label .num {
-    display: inline-block;
-    margin-right: 10px;
-    color: var(--accent);
-  }
+  .label .num { display: inline-block; margin-right: 10px; color: var(--accent); }
 
-  /* Radio options */
-  .options {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .option {
     border: 1px solid var(--rule);
     border-radius: 3px;
@@ -165,34 +122,13 @@
     background: #fff;
     position: relative;
   }
-  .option:hover {
-    border-color: var(--ink);
-    transform: translateY(-1px);
-  }
-  .option input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .option.selected {
-    border-color: var(--ink);
-    background: var(--ink);
-    color: var(--bg);
-  }
+  .option:hover { border-color: var(--ink); transform: translateY(-1px); }
+  .option input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+  .option.selected { border-color: var(--ink); background: var(--ink); color: var(--bg); }
   .option.selected .desc { color: var(--rule); }
-  .option-name {
-    font-weight: 500;
-    font-size: 17px;
-    letter-spacing: -0.01em;
-    margin-bottom: 4px;
-  }
-  .option .desc {
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.4;
-  }
+  .option-name { font-weight: 500; font-size: 17px; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .option .desc { font-size: 13px; color: var(--muted); line-height: 1.4; }
 
-  /* Drop zone */
   .dropzone {
     border: 1.5px dashed var(--rule);
     border-radius: 3px;
@@ -203,134 +139,69 @@
     cursor: pointer;
     min-height: 120px;
   }
-  .dropzone:hover, .dropzone.dragover {
-    border-color: var(--accent);
-    background: #FFF9F5;
-  }
-  .dropzone.has-file {
-    border-color: var(--ink);
-    border-style: solid;
-    text-align: left;
-  }
-  .dz-icon {
-    font-size: 28px;
-    margin-bottom: 8px;
-  }
-  .dz-text {
-    font-size: 16px;
-    color: var(--ink);
-    font-weight: 500;
-  }
+  .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: #FFF9F5; }
+  .dropzone.has-file { border-color: var(--ink); border-style: solid; text-align: left; }
+  .dz-icon { font-size: 28px; margin-bottom: 8px; }
+  .dz-text { font-size: 16px; color: var(--ink); font-weight: 500; }
   .dz-hint {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-top: 6px;
+    font-size: 11px; letter-spacing: 0.08em;
+    color: var(--muted); margin-top: 6px;
   }
-  .dz-file {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }
-  .dz-filename {
-    font-weight: 500;
-    font-size: 16px;
-    word-break: break-all;
-  }
+  .dz-file { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .dz-filename { font-weight: 500; font-size: 16px; word-break: break-all; }
   .dz-size {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.06em;
+    font-size: 11px; color: var(--muted); letter-spacing: 0.06em;
   }
   .dz-remove {
-    background: none;
-    border: 1px solid var(--rule);
-    color: var(--muted);
-    padding: 6px 12px;
-    border-radius: 3px;
-    cursor: pointer;
+    background: none; border: 1px solid var(--rule); color: var(--muted);
+    padding: 6px 12px; border-radius: 3px; cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
     transition: all 0.15s;
   }
-  .dz-remove:hover {
-    color: var(--accent);
-    border-color: var(--accent);
-  }
+  .dz-remove:hover { color: var(--accent); border-color: var(--accent); }
 
-  /* Buttons */
   .btn {
     padding: 14px 20px;
-    background: var(--ink);
-    color: var(--bg);
-    border: none;
+    background: var(--ink); color: var(--bg); border: none;
     border-radius: 3px;
     font-family: 'Fraunces', serif;
-    font-size: 16px;
-    font-weight: 500;
-    font-style: italic;
-    letter-spacing: -0.01em;
-    cursor: pointer;
+    font-size: 16px; font-weight: 500; font-style: italic;
+    letter-spacing: -0.01em; cursor: pointer;
     transition: all 0.18s ease;
   }
-  .btn:hover:not(:disabled) {
-    background: var(--accent);
-    transform: translateY(-1px);
-  }
+  .btn:hover:not(:disabled) { background: var(--accent); transform: translateY(-1px); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn.full { width: 100%; padding: 18px 24px; font-size: 18px; }
-
   .btn-secondary {
-    background: transparent;
-    color: var(--ink);
-    border: 1px solid var(--rule);
+    background: transparent; color: var(--ink); border: 1px solid var(--rule);
   }
   .btn-secondary:hover:not(:disabled) {
-    background: var(--ink);
-    color: var(--bg);
-    border-color: var(--ink);
+    background: var(--ink); color: var(--bg); border-color: var(--ink);
     transform: translateY(-1px);
   }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .btn-row .btn { flex: 1; min-width: 120px; }
 
-  .btn-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 20px;
-  }
-  .btn-row .btn { flex: 1; min-width: 140px; }
-
-  /* Status banner */
   .status {
-    margin-top: 24px;
-    padding: 16px 20px;
-    border-left: 2px solid var(--accent);
-    background: #FFF9F5;
-    display: none;
-    font-size: 15px;
+    margin-top: 24px; padding: 16px 20px;
+    border-left: 2px solid var(--accent); background: #FFF9F5;
+    display: none; font-size: 15px;
   }
   .status.show { display: block; }
   .status.error { border-left-color: #C13030; background: #FFF0F0; }
   .status.success { border-left-color: #2A7F3E; background: #F0FAF2; }
   .status-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-    margin-bottom: 4px;
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.18em; color: var(--muted); margin-bottom: 4px;
   }
 
-  /* Spinner */
   .spinner {
     display: inline-block;
-    width: 14px;
-    height: 14px;
+    width: 14px; height: 14px;
     border: 2px solid currentColor;
     border-right-color: transparent;
     border-radius: 50%;
@@ -340,14 +211,14 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Calibrate panel — result display */
+  /* ===== CALIBRATE RESULT ===== */
   .result-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-top: 4px;
+    grid-template-columns: 280px 1fr;
+    gap: 28px;
+    align-items: start;
   }
-  @media (max-width: 700px) {
+  @media (max-width: 720px) {
     .result-grid { grid-template-columns: 1fr; }
   }
 
@@ -357,149 +228,154 @@
     background: #fff;
     overflow: hidden;
     aspect-ratio: 4 / 5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
   }
-  .preview-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  .preview-box img { width: 100%; height: 100%; object-fit: cover; }
   .preview-box .empty {
     color: var(--muted);
-    font-size: 14px;
-    text-align: center;
-    padding: 20px;
     font-family: 'JetBrains Mono', monospace;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-size: 10px;
   }
 
-  .swatch-block {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  .multi-banner {
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .colors-stack {
+    display: flex; flex-direction: column; gap: 18px;
+  }
+
+  .color-block {
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px;
+    background: #fff;
+    transition: border-color 0.15s;
+  }
+  .color-block.editing { border-color: var(--accent); }
+
+  .color-block-head {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 4px;
+  }
+  .role-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .role-tag.base { background: var(--ink); color: var(--bg); }
+  .role-tag.print { background: var(--accent); color: var(--bg); }
+  .share-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
   }
 
   .swatch {
     width: 100%;
-    aspect-ratio: 16 / 9;
-    border-radius: 3px;
+    height: 56px;
+    border-radius: 2px;
     border: 1px solid var(--rule);
     background: #f0f0f0;
-    display: flex;
-    align-items: flex-end;
-    padding: 14px 16px;
+    margin: 12px 0;
+    position: relative;
   }
   .swatch .hex-tag {
+    position: absolute;
+    bottom: 6px; right: 6px;
     background: rgba(255,255,255,0.92);
     color: var(--ink);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    padding: 4px 8px;
+    font-size: 11px;
+    padding: 3px 6px;
     border-radius: 2px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
   }
 
   .meta-grid {
     display: grid;
     grid-template-columns: max-content 1fr;
-    gap: 8px 16px;
-    font-size: 15px;
+    gap: 6px 14px;
+    font-size: 14px;
+    margin-bottom: 8px;
   }
   .meta-grid .k {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--muted);
+    font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.16em; color: var(--muted);
     align-self: center;
   }
-  .meta-grid .v {
-    font-weight: 500;
-    font-size: 16px;
-  }
+  .meta-grid .v { font-weight: 500; font-size: 15px; }
   .meta-grid .v.mono {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 0.04em;
   }
-
   .from-correction-tag {
     display: inline-block;
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
-    background: var(--accent);
-    color: var(--bg);
-    padding: 3px 8px;
-    border-radius: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    margin-left: 8px;
-    vertical-align: middle;
+    background: var(--accent); color: var(--bg);
+    padding: 2px 6px; border-radius: 2px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-left: 8px; vertical-align: middle;
   }
 
-  /* Correction form */
-  .correct-block {
+  /* Inline correction form inside a color block */
+  .correct-inline {
+    margin-top: 14px;
+    padding-top: 14px;
     border-top: 1px solid var(--rule);
-    margin-top: 28px;
-    padding-top: 28px;
     display: none;
   }
-  .correct-block.show { display: block; }
+  .correct-inline.show { display: block; }
 
-  .correct-grid {
+  .correct-inline-grid {
     display: grid;
-    grid-template-columns: max-content 1fr 1fr;
-    gap: 12px 16px;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 12px;
     align-items: center;
   }
-  @media (max-width: 700px) {
-    .correct-grid { grid-template-columns: 1fr; }
+  @media (max-width: 600px) {
+    .correct-inline-grid { grid-template-columns: 1fr; }
   }
-
-  .correct-grid .row-label {
+  .correct-inline-grid .row-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--muted);
+    font-size: 9px; text-transform: uppercase;
+    letter-spacing: 0.16em; color: var(--muted);
   }
-
   input[type="color"] {
-    width: 100%;
-    height: 44px;
+    width: 100%; height: 40px;
     border: 1px solid var(--rule);
-    border-radius: 3px;
-    background: #fff;
-    cursor: pointer;
-    padding: 4px;
+    border-radius: 3px; background: #fff;
+    cursor: pointer; padding: 4px;
   }
   input[type="text"] {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--rule);
-    border-radius: 3px;
+    width: 100%; padding: 9px 12px;
+    border: 1px solid var(--rule); border-radius: 3px;
     background: #fff;
     font-family: 'Fraunces', serif;
-    font-size: 15px;
-    color: var(--ink);
+    font-size: 14px; color: var(--ink);
   }
-  input[type="text"]:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
+  input[type="text"]:focus { outline: none; border-color: var(--accent); }
 
-  .picked-hex-display {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-  }
-
-  /* Paste zone */
   .paste-zone {
     border: 1.5px dashed var(--rule);
     border-radius: 3px;
@@ -508,71 +384,46 @@
     background: #fff;
     color: var(--muted);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
+    font-size: 11px; letter-spacing: 0.08em;
     margin-top: 10px;
     cursor: text;
-    transition: all 0.18s ease;
   }
-  .paste-zone:focus, .paste-zone.has-paste { outline: none; border-color: var(--accent); }
+  .paste-zone:focus { outline: none; border-color: var(--accent); }
 
-  /* Stats footer */
   .stats-row {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-    margin-top: 16px;
-    padding: 14px 16px;
+    display: flex; gap: 24px; flex-wrap: wrap;
+    margin-top: 16px; padding: 14px 16px;
     background: rgba(160,57,28,0.04);
     border-radius: 3px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--muted);
+    font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
   }
   .stats-row .stat strong {
-    color: var(--ink);
-    font-weight: 500;
-    margin-left: 4px;
+    color: var(--ink); font-weight: 500; margin-left: 4px;
   }
 
   .footer-actions {
     margin-top: 14px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    display: flex; gap: 8px; flex-wrap: wrap;
   }
   .footer-actions a, .footer-actions button {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    text-decoration: none;
-    background: none;
-    border: 1px solid var(--rule);
-    padding: 6px 10px;
-    border-radius: 2px;
-    cursor: pointer;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    background: none; border: 1px solid var(--rule);
+    padding: 6px 10px; border-radius: 2px; cursor: pointer;
     transition: all 0.15s;
   }
   .footer-actions a:hover, .footer-actions button:hover {
-    color: var(--accent);
-    border-color: var(--accent);
+    color: var(--accent); border-color: var(--accent);
   }
 
   footer {
-    margin-top: 64px;
-    padding-top: 24px;
+    margin-top: 64px; padding-top: 24px;
     border-top: 1px solid var(--rule);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
+    font-size: 11px; letter-spacing: 0.08em; color: var(--muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
   }
 
   @media (max-width: 600px) {
@@ -589,7 +440,7 @@
 
   <header>
     <div class="brand">Chro<em>matic</em></div>
-    <div class="tagline">v2 · Color Extractor</div>
+    <div class="tagline">v3 · Color Extractor</div>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -605,7 +456,8 @@
   <section class="panel active" id="panel-batch" role="tabpanel">
     <p class="intro">
       Upload a <strong>zip of product images</strong> — named by SKU — and receive a clean xlsx
-      with the canonical color name, hex code, and parent color for each item.
+      with base color, printed color, and parent groupings for each item. Multi-color prints
+      are flagged automatically.
     </p>
 
     <form id="batchForm" class="card">
@@ -658,9 +510,9 @@
   <!-- ============ CALIBRATE PANEL ============ -->
   <section class="panel" id="panel-calibrate" role="tabpanel">
     <p class="intro">
-      Upload or paste <strong>a single garment image</strong> to see its predicted color. If
-      the prediction is off, use the picker to specify the correct color — the model
-      learns from your correction and applies it to future similar colors.
+      Upload or paste <strong>a single garment image</strong> to see its predicted color(s).
+      Multi-color products (e.g. a printed dress) show as base + print. Correct any color
+      individually with the picker — the model learns from each correction.
     </p>
 
     <div class="card">
@@ -697,7 +549,7 @@
             <button type="button" class="dz-remove" id="calibRemoveBtn">Remove</button>
           </div>
         </div>
-        <div class="paste-zone" id="pasteZone" tabindex="0" contenteditable="true" aria-label="Paste image here">
+        <div class="paste-zone" id="pasteZone" tabindex="0" contenteditable="true">
           PASTE AN IMAGE HERE (CTRL+V)
         </div>
       </div>
@@ -708,7 +560,6 @@
       </div>
     </div>
 
-    <!-- Result card (shown after classify) -->
     <div class="card" id="resultCard" style="display:none">
       <label class="label"><span class="num">03</span> Result</label>
       <div class="result-grid">
@@ -717,51 +568,13 @@
             <div class="empty">no image yet</div>
           </div>
         </div>
-        <div class="swatch-block">
-          <div class="swatch" id="resultSwatch">
-            <span class="hex-tag" id="resultHexTag">—</span>
-          </div>
-          <div class="meta-grid">
-            <div class="k">Color</div>
-            <div class="v" id="resultName">—<span id="fromCorrectionTag"></span></div>
-            <div class="k">Family</div>
-            <div class="v" id="resultParent">—</div>
-            <div class="k">Hex</div>
-            <div class="v mono" id="resultHex">—</div>
-            <div class="k">Sampled</div>
-            <div class="v mono" id="resultSampledHex">—</div>
-          </div>
-          <div class="btn-row">
-            <button type="button" class="btn btn-secondary" id="confirmBtn">✓ Looks right</button>
-            <button type="button" class="btn" id="correctBtn">✕ Correct color</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Correction form -->
-      <div class="correct-block" id="correctBlock">
-        <label class="label"><span class="num">04</span> Pick the correct color</label>
-        <div class="correct-grid">
-          <div class="row-label">Pick</div>
-          <input type="color" id="pickerInput" value="#888888">
-          <div class="picked-hex-display" id="pickedHexDisplay">#888888</div>
-
-          <div class="row-label">Name (optional)</div>
-          <input type="text" id="correctNameInput" placeholder="e.g. Midnight Blue (leave blank for Custom #...)" />
-          <div></div>
-
-          <div class="row-label">Family (optional)</div>
-          <input type="text" id="correctFamilyInput" placeholder="e.g. Blue (auto-detected if blank)" />
-          <div></div>
-        </div>
-        <div class="btn-row">
-          <button type="button" class="btn btn-secondary" id="cancelCorrectBtn">Cancel</button>
-          <button type="button" class="btn" id="submitCorrectBtn">Submit correction</button>
+        <div>
+          <div id="multiBannerWrap"></div>
+          <div class="colors-stack" id="colorsStack"></div>
         </div>
       </div>
     </div>
 
-    <!-- Stats & corrections management -->
     <div class="stats-row" id="statsRow">
       <div class="stat">PALETTE: <strong id="statTotalPalette">—</strong></div>
       <div class="stat">CORRECTIONS: <strong id="statAnchors">—</strong></div>
@@ -794,14 +607,14 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// ---------- Mode option pickers (shared logic) ----------
+// ---------- Mode picker helper ----------
 function setupOptionPicker(containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.querySelectorAll('.option').forEach(opt => {
-    opt.addEventListener('click', (e) => {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.querySelectorAll('.option').forEach(opt => {
+    opt.addEventListener('click', e => {
       if (e.target.tagName === 'INPUT') return;
-      container.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+      c.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
       opt.classList.add('selected');
       opt.querySelector('input').checked = true;
     });
@@ -810,11 +623,9 @@ function setupOptionPicker(containerId) {
 setupOptionPicker('batchModeOptions');
 setupOptionPicker('calibModeOptions');
 
-// ---------- Generic dropzone helpers ----------
-function setupDropzone({ zoneEl, inputEl, emptyEl, filledEl, fileNameEl, fileSizeEl, removeBtn,
-                         accept, onFile, onRemove }) {
+// ---------- Generic dropzone ----------
+function setupDropzone({ zoneEl, inputEl, emptyEl, filledEl, fileNameEl, fileSizeEl, removeBtn, onFile, onRemove }) {
   let selected = null;
-
   function reset() {
     selected = null;
     inputEl.value = '';
@@ -832,46 +643,36 @@ function setupDropzone({ zoneEl, inputEl, emptyEl, filledEl, fileNameEl, fileSiz
     zoneEl.classList.add('has-file');
     if (onFile) onFile(file);
   }
-
-  zoneEl.addEventListener('click', (e) => {
+  zoneEl.addEventListener('click', e => {
     if (e.target === removeBtn) return;
     if (!selected) inputEl.click();
   });
-  inputEl.addEventListener('change', (e) => {
+  inputEl.addEventListener('change', e => {
     if (e.target.files.length) showFile(e.target.files[0]);
   });
   ['dragenter', 'dragover'].forEach(ev =>
-    zoneEl.addEventListener(ev, (e) => { e.preventDefault(); zoneEl.classList.add('dragover'); })
+    zoneEl.addEventListener(ev, e => { e.preventDefault(); zoneEl.classList.add('dragover'); })
   );
   ['dragleave', 'drop'].forEach(ev =>
-    zoneEl.addEventListener(ev, (e) => { e.preventDefault(); zoneEl.classList.remove('dragover'); })
+    zoneEl.addEventListener(ev, e => { e.preventDefault(); zoneEl.classList.remove('dragover'); })
   );
-  zoneEl.addEventListener('drop', (e) => {
+  zoneEl.addEventListener('drop', e => {
     if (e.dataTransfer.files.length) showFile(e.dataTransfer.files[0]);
   });
-  removeBtn.addEventListener('click', (e) => { e.stopPropagation(); reset(); });
-
-  return {
-    showFile,
-    reset,
-    getFile: () => selected,
-  };
+  removeBtn.addEventListener('click', e => { e.stopPropagation(); reset(); });
+  return { showFile, reset, getFile: () => selected };
 }
-
-function formatSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+function formatSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+  return (b / (1024 * 1024)).toFixed(2) + ' MB';
 }
-
-function showStatus(idTitle, idMsg, idContainer, type, title, msg) {
-  document.getElementById(idContainer).className = 'status show ' + (type || '');
+function showStatus(idTitle, idMsg, idC, type, title, msg) {
+  document.getElementById(idC).className = 'status show ' + (type || '');
   document.getElementById(idTitle).textContent = title;
   document.getElementById(idMsg).textContent = msg;
 }
-function hideStatus(idContainer) {
-  document.getElementById(idContainer).className = 'status';
-}
+function hideStatus(idC) { document.getElementById(idC).className = 'status'; }
 
 // ============================================================
 // BATCH TAB
@@ -887,7 +688,7 @@ const batchDz = setupDropzone({
   fileNameEl: document.getElementById('batchFileName'),
   fileSizeEl: document.getElementById('batchFileSize'),
   removeBtn: document.getElementById('batchRemoveBtn'),
-  onFile: (file) => {
+  onFile: file => {
     if (!file.name.toLowerCase().endsWith('.zip')) {
       showStatus('batchStatusTitle', 'batchStatusMsg', 'batchStatus', 'error', 'Invalid file', 'Please upload a .zip');
       batchDz.reset();
@@ -899,7 +700,7 @@ const batchDz = setupDropzone({
   onRemove: () => { batchSubmit.disabled = true; },
 });
 
-document.getElementById('batchForm').addEventListener('submit', async (e) => {
+document.getElementById('batchForm').addEventListener('submit', async e => {
   e.preventDefault();
   const file = batchDz.getFile();
   if (!file) return;
@@ -945,23 +746,20 @@ document.getElementById('batchForm').addEventListener('submit', async (e) => {
 // CALIBRATE TAB
 // ============================================================
 const resultCard = document.getElementById('resultCard');
-const correctBlock = document.getElementById('correctBlock');
+const colorsStack = document.getElementById('colorsStack');
+const multiBannerWrap = document.getElementById('multiBannerWrap');
 let currentImageDataURL = null;
-let currentResult = null;
+let currentResult = null;  // {colors:[...], is_multi, image_hash}
 
 async function classifyCurrentImage() {
   const file = calibDz.getFile();
   if (!file) return;
   const mode = document.querySelector('input[name="calib_mode"]:checked').value;
-
   showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', '', 'Classifying',
-    'Reading image, sampling color, finding nearest match…');
-
-  // Read for preview
+    'Reading image, sampling colors, finding nearest matches…');
   currentImageDataURL = await readAsDataURL(file);
   document.getElementById('previewBox').innerHTML =
     `<img src="${currentImageDataURL}" alt="preview">`;
-
   try {
     const fd = new FormData();
     fd.append('file', file);
@@ -972,40 +770,154 @@ async function classifyCurrentImage() {
       try { msg = (await res.json()).detail || msg; } catch {}
       throw new Error(msg);
     }
-    const data = await res.json();
-    currentResult = data;
-    renderResult(data);
+    currentResult = await res.json();
+    renderResult();
     hideStatus('calibStatus');
     resultCard.style.display = 'block';
-    correctBlock.classList.remove('show');
     refreshStats();
   } catch (err) {
     showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Failed', err.message || String(err));
   }
 }
 
-function renderResult(d) {
-  document.getElementById('resultSwatch').style.background = d.hex;
-  document.getElementById('resultHexTag').textContent = d.hex;
-  document.getElementById('resultName').firstChild.nodeValue = d.name + ' ';
-  document.getElementById('fromCorrectionTag').innerHTML =
-    d.from_correction ? '<span class="from-correction-tag">Learned</span>' : '';
-  document.getElementById('resultParent').textContent = d.parent;
-  document.getElementById('resultHex').textContent = d.hex;
-  document.getElementById('resultSampledHex').textContent = d.sampled_hex;
-  document.getElementById('pickerInput').value = d.hex;
-  document.getElementById('pickedHexDisplay').textContent = d.hex;
-  document.getElementById('correctNameInput').value = '';
-  document.getElementById('correctFamilyInput').value = '';
+function renderResult() {
+  if (!currentResult) return;
+  const { colors, is_multi } = currentResult;
+  multiBannerWrap.innerHTML = is_multi
+    ? '<div class="multi-banner">Multi-color print detected</div>'
+    : '';
+  colorsStack.innerHTML = '';
+  colors.forEach((c, idx) => {
+    colorsStack.appendChild(buildColorBlock(c, idx));
+  });
 }
 
-function readAsDataURL(blobOrFile) {
+function buildColorBlock(color, idx) {
+  const block = document.createElement('div');
+  block.className = 'color-block';
+  block.dataset.idx = idx;
+  const sharePct = (color.share * 100).toFixed(0);
+  block.innerHTML = `
+    <div class="color-block-head">
+      <span class="role-tag ${color.role}">${color.role}</span>
+      <span class="share-tag">${sharePct}% of image</span>
+    </div>
+    <div class="swatch" style="background:${color.hex}">
+      <span class="hex-tag">${color.hex}</span>
+    </div>
+    <div class="meta-grid">
+      <div class="k">Color</div>
+      <div class="v">${escapeHtml(color.name)}${color.from_correction ? '<span class="from-correction-tag">Learned</span>' : ''}</div>
+      <div class="k">Family</div>
+      <div class="v">${escapeHtml(color.parent)}</div>
+      <div class="k">Sampled</div>
+      <div class="v mono">${color.sampled_hex}</div>
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn btn-secondary" data-act="confirm">✓ Looks right</button>
+      <button type="button" class="btn" data-act="correct">✕ Correct color</button>
+    </div>
+    <div class="correct-inline" data-correct-form>
+      <div class="correct-inline-grid">
+        <div class="row-label">Pick</div>
+        <input type="color" data-field="picker" value="${color.hex}">
+        <div class="row-label">Name</div>
+        <input type="text" data-field="name" placeholder="e.g. Midnight Blue (optional)">
+        <div class="row-label">Family</div>
+        <input type="text" data-field="family" placeholder="e.g. Blue (auto-detected if blank)">
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-secondary" data-act="cancel-correct">Cancel</button>
+        <button type="button" class="btn" data-act="submit-correct">Submit correction</button>
+      </div>
+    </div>
+  `;
+  block.addEventListener('click', async e => {
+    const act = e.target.dataset.act;
+    if (!act) return;
+    if (act === 'confirm') {
+      showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'success', 'Confirmed',
+        `${color.role.toUpperCase()} color "${color.name}" confirmed.`);
+    } else if (act === 'correct') {
+      block.classList.add('editing');
+      block.querySelector('[data-correct-form]').classList.add('show');
+    } else if (act === 'cancel-correct') {
+      block.classList.remove('editing');
+      block.querySelector('[data-correct-form]').classList.remove('show');
+    } else if (act === 'submit-correct') {
+      await submitCorrection(idx, block);
+    }
+  });
+  return block;
+}
+
+async function submitCorrection(idx, block) {
+  const color = currentResult.colors[idx];
+  const hex = block.querySelector('[data-field="picker"]').value;
+  const name = block.querySelector('[data-field="name"]').value.trim();
+  const family = block.querySelector('[data-field="family"]').value.trim();
+
+  // Build a full pin payload by substituting the corrected color
+  const fullColorsForPin = currentResult.colors.map((c, i) => ({
+    role: c.role,
+    name: i === idx ? (name || `Custom ${hex.toUpperCase()}`) : c.name,
+    hex: i === idx ? hex.toUpperCase() : c.hex,
+    parent: i === idx ? (family || c.parent) : c.parent,
+    sampled_rgb: c.sampled_rgb,
+    share: c.share,
+  }));
+
+  showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', '', 'Saving',
+    `Recording correction for ${color.role}…`);
+  try {
+    const res = await fetch('/correct', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image_hash: currentResult.image_hash,
+        sampled_rgb: color.sampled_rgb,
+        corrected_hex: hex,
+        corrected_name: name || null,
+        corrected_family: family || null,
+        role: color.role,
+        full_colors_for_pin: fullColorsForPin,
+      }),
+    });
+    if (!res.ok) {
+      let msg = 'Failed to save';
+      try { msg = (await res.json()).detail || msg; } catch {}
+      throw new Error(msg);
+    }
+    const data = await res.json();
+
+    // Update in-memory result so re-rendering reflects the correction immediately
+    currentResult.colors[idx].name = data.saved.name;
+    currentResult.colors[idx].hex = data.saved.hex;
+    currentResult.colors[idx].parent = data.saved.parent;
+    currentResult.colors[idx].from_correction = true;
+    renderResult();
+
+    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'success', 'Saved',
+      `Stored as "${data.saved.name}" (${data.saved.parent}). The model will use this for similar colors.`);
+    refreshStats();
+  } catch (err) {
+    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Failed', err.message || String(err));
+  }
+}
+
+function readAsDataURL(blob) {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result);
     r.onerror = reject;
-    r.readAsDataURL(blobOrFile);
+    r.readAsDataURL(blob);
   });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
 }
 
 const calibDz = setupDropzone({
@@ -1016,7 +928,7 @@ const calibDz = setupDropzone({
   fileNameEl: document.getElementById('calibFileName'),
   fileSizeEl: document.getElementById('calibFileSize'),
   removeBtn: document.getElementById('calibRemoveBtn'),
-  onFile: (file) => {
+  onFile: file => {
     if (!file.type.startsWith('image/')) {
       showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Invalid file', 'Please upload an image');
       calibDz.reset();
@@ -1036,93 +948,27 @@ const calibDz = setupDropzone({
   },
 });
 
-// Paste-image handling
 const pasteZone = document.getElementById('pasteZone');
-pasteZone.addEventListener('paste', async (e) => {
+pasteZone.addEventListener('paste', async e => {
   e.preventDefault();
   const items = (e.clipboardData || window.clipboardData).items;
   for (const item of items) {
     if (item.type.startsWith('image/')) {
       const blob = item.getAsFile();
-      // Wrap in a File-like with a name
       const file = new File([blob], 'pasted-image.' + (blob.type.split('/')[1] || 'png'), { type: blob.type });
       pasteZone.textContent = 'PASTE AN IMAGE HERE (CTRL+V)';
       calibDz.showFile(file);
       return;
     }
   }
-  // No image found
   pasteZone.textContent = 'NO IMAGE IN CLIPBOARD — TRY COPYING AN IMAGE FIRST';
   setTimeout(() => { pasteZone.textContent = 'PASTE AN IMAGE HERE (CTRL+V)'; }, 2200);
 });
-// Prevent text being typed into the paste zone
-pasteZone.addEventListener('keydown', (e) => {
+pasteZone.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) return;
   e.preventDefault();
 });
 
-// Confirm / Correct buttons
-document.getElementById('confirmBtn').addEventListener('click', () => {
-  showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'success', 'Confirmed', 'Glad it looked right.');
-});
-document.getElementById('correctBtn').addEventListener('click', () => {
-  correctBlock.classList.add('show');
-  document.getElementById('pickerInput').focus();
-});
-document.getElementById('cancelCorrectBtn').addEventListener('click', () => {
-  correctBlock.classList.remove('show');
-});
-document.getElementById('pickerInput').addEventListener('input', (e) => {
-  document.getElementById('pickedHexDisplay').textContent = e.target.value.toUpperCase();
-});
-
-// Submit correction
-document.getElementById('submitCorrectBtn').addEventListener('click', async () => {
-  if (!currentResult) return;
-  const hex = document.getElementById('pickerInput').value;
-  const name = document.getElementById('correctNameInput').value.trim();
-  const family = document.getElementById('correctFamilyInput').value.trim();
-
-  showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', '', 'Saving', 'Recording correction…');
-
-  try {
-    const res = await fetch('/correct', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        image_hash: currentResult.image_hash,
-        sampled_rgb: currentResult.sampled_rgb,
-        corrected_hex: hex,
-        corrected_name: name || null,
-        corrected_family: family || null,
-      }),
-    });
-    if (!res.ok) {
-      let msg = 'Failed to save';
-      try { msg = (await res.json()).detail || msg; } catch {}
-      throw new Error(msg);
-    }
-    const data = await res.json();
-    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'success',
-      'Saved', `Stored as "${data.saved.name}" (${data.saved.parent}). The model will use this for similar colors.`);
-    correctBlock.classList.remove('show');
-
-    // Re-classify so the result shows the learned answer
-    if (currentImageDataURL) {
-      // Update the displayed result manually with the saved correction
-      currentResult.name = data.saved.name;
-      currentResult.hex = data.saved.hex;
-      currentResult.parent = data.saved.parent;
-      currentResult.from_correction = true;
-      renderResult(currentResult);
-    }
-    refreshStats();
-  } catch (err) {
-    showStatus('calibStatusTitle', 'calibStatusMsg', 'calibStatus', 'error', 'Failed', err.message || String(err));
-  }
-});
-
-// Reset corrections
 document.getElementById('resetBtn').addEventListener('click', async () => {
   if (!confirm('Wipe all corrections? This cannot be undone.')) return;
   try {
@@ -1135,7 +981,6 @@ document.getElementById('resetBtn').addEventListener('click', async () => {
   }
 });
 
-// Stats
 async function refreshStats() {
   try {
     const res = await fetch('/corrections/stats');
@@ -1148,7 +993,6 @@ async function refreshStats() {
 }
 refreshStats();
 
-// Health ping
 fetch('/health').then(r => r.ok ? r.json() : null).then(d => {
   document.getElementById('healthText').textContent =
     d && d.status === 'ok' ? 'Server: online' : 'Server: offline';

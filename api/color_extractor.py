@@ -1,46 +1,39 @@
 """
 color_extractor.py
 
-Color extraction + classification with human-in-the-loop calibration.
+Color extraction + classification with multi-color detection.
 
 Pipeline:
-  1. Sample dominant garment/footwear color from image (RGB).
-  2. Hash the image — if we have a stored correction for this exact image,
-     return it directly (image-hash override).
-  3. Otherwise convert sampled RGB to CIELAB, find perceptually nearest
-     entry in the augmented palette via Delta E (CIE76).
-  4. Augmented palette = original palette.json + user_anchors from
-     corrections.json. Each user correction becomes a new palette anchor.
+  1. Sample dominant region pixels.
+  2. Filter out background (near-white, neutral gray) and skin (footwear).
+  3. Cluster remaining pixels with k-means (k=3 in Lab space).
+  4. Drop clusters under MIN_SHARE_PCT (noise/shadow/highlight).
+  5. Merge clusters that are perceptually too close (Delta E < MERGE_THRESHOLD).
+  6. Classify each remaining cluster against the augmented palette.
+  7. Return list of color records sorted by share. is_multi=True iff 3+ distinct.
 
-Corrections store schema (corrections.json):
-  {
-    "image_overrides": {
-      "<sha256_of_image_bytes>": {
-        "name": "Midnight Blue",
-        "hex": "#0F2740",
-        "parent": "Blue",
-        "sampled_rgb": [r, g, b],
-        "ts": "2026-04-29T...",
-      }
-    },
-    "user_anchors": [
-      {
-        "name": "Midnight Blue",
-        "hex": "#0F2740",
-        "parent": "Blue",
-        "rgb": [r, g, b],
-        "weight": 1,
-        "ts": "...",
-      },
-      ...
-    ]
+Calibration / corrections:
+  - Each correction is per-color (the user can correct just the base, or just the
+    print). The store keys corrections by the cluster's sampled RGB.
+  - image_hash override is deprecated for multi-color (would need to be per-role)
+    but is still set when the result is single-color, for backwards-compatible
+    single-image pinning.
+
+Public API (used by main.py):
+  process_image(img_source, mode, image_bytes=None) -> {
+      colors: [
+        {role: 'base'|'print'|'print2', name, hex, parent, sampled_rgb,
+         sampled_hex, share, from_correction},
+        ...
+      ],
+      is_multi: bool,
+      image_hash: str | None,
   }
-
-The augmented palette = palette.json entries + user_anchors entries.
-When a user corrects an image, we add the *sampled RGB* (the color we
-read from the image) -> the corrected name as an anchor. Next time any
-image has a dominant RGB near that point, the user's chosen name will
-be the nearest neighbour and will win.
+  add_correction(...)
+  get_corrections_snapshot()
+  get_corrections_stats()
+  import_corrections(...)
+  reset_corrections()
 """
 import hashlib
 import json
@@ -53,19 +46,21 @@ from typing import Optional
 import numpy as np
 from PIL import Image
 
+# ---------------- Tunable thresholds ----------------
+MAX_CLUSTERS = 3                # k for k-means
+MIN_SHARE_PCT = 0.04            # cluster must be >=4% of sampled pixels (catches sparse prints like florals)
+MERGE_THRESHOLD = 28.0          # Lab Delta E below which clusters are considered the same color (merges shadows/highlights into base)
+KMEANS_ITERS = 12               # plenty for 3 centroids on a few thousand pixels
+KMEANS_SAMPLE_LIMIT = 5000      # cap pixels fed into k-means for speed
+ANCHOR_INFLUENCE_THRESHOLD = 30.0  # Lab Delta E within which a user anchor wins over base palette
+
 
 # ---------------- Paths ----------------
 _API_DIR = Path(__file__).parent
 _PALETTE_PATH = _API_DIR / "palette.json"
 
-# Corrections file lives in a writable directory. On Render's free tier the
-# whole filesystem is writable but ephemeral (wiped on redeploy). Users can
-# export via /corrections/export and re-import via /corrections/import.
 _CORRECTIONS_DIR_ENV = os.environ.get("CHROMATIC_DATA_DIR")
-if _CORRECTIONS_DIR_ENV:
-    _DATA_DIR = Path(_CORRECTIONS_DIR_ENV)
-else:
-    _DATA_DIR = _API_DIR / "data"
+_DATA_DIR = Path(_CORRECTIONS_DIR_ENV) if _CORRECTIONS_DIR_ENV else (_API_DIR / "data")
 _DATA_DIR.mkdir(parents=True, exist_ok=True)
 _CORRECTIONS_PATH = _DATA_DIR / "corrections.json"
 
@@ -80,6 +75,11 @@ def _hex_to_rgb(hex_str):
     return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 
 
+def _rgb_to_hex(rgb):
+    r, g, b = (int(c) for c in rgb)
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
 def _empty_corrections():
     return {"image_overrides": {}, "user_anchors": []}
 
@@ -90,7 +90,6 @@ def _load_corrections():
     try:
         with open(_CORRECTIONS_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
-        # Sanity: ensure both keys exist
         data.setdefault("image_overrides", {})
         data.setdefault("user_anchors", [])
         return data
@@ -98,53 +97,8 @@ def _load_corrections():
         return _empty_corrections()
 
 
-# Mutex protects in-memory state and the corrections file
 _lock = threading.Lock()
 _corrections = _load_corrections()
-
-
-# ---------------- Augmented palette (rebuilt on every correction) ----------------
-_palette_names: list = []
-_palette_hexes: list = []
-_palette_parents: list = []
-_palette_lab: np.ndarray = np.zeros((0, 3))
-
-
-def _rebuild_palette_index():
-    """Re-compute the cached arrays for fast nearest-neighbour lookup.
-
-    Combines BASE_PALETTE entries with user_anchors. Anchors with higher
-    weight get inserted multiple times so they pull harder (Delta E is
-    distance-based, but if multiple entries collide at the same point,
-    argmin still picks the first — duplication doesn't change winners,
-    so weight is informational for now and reserved for future
-    weighted-distance variants).
-    """
-    global _palette_names, _palette_hexes, _palette_parents, _palette_lab
-
-    entries = []
-    for e in BASE_PALETTE:
-        rgb = _hex_to_rgb(e["hex"]) if "hex" in e and not isinstance(e.get("rgb"), list) else tuple(e["rgb"])
-        entries.append({
-            "name": e["name"],
-            "hex": e["hex"],
-            "parent": e["parent"],
-            "rgb": rgb,
-        })
-
-    for anchor in _corrections.get("user_anchors", []):
-        entries.append({
-            "name": anchor["name"],
-            "hex": anchor["hex"],
-            "parent": anchor["parent"],
-            "rgb": tuple(anchor["rgb"]),
-        })
-
-    _palette_names = [e["name"] for e in entries]
-    _palette_hexes = [e["hex"] for e in entries]
-    _palette_parents = [e["parent"] for e in entries]
-    rgbs = np.array([e["rgb"] for e in entries], dtype=float)
-    _palette_lab = rgb_to_lab(rgbs)
 
 
 # ---------------- sRGB -> CIELAB ----------------
@@ -179,13 +133,57 @@ def rgb_to_lab(rgb):
     return out[0] if single else out
 
 
-# Now that rgb_to_lab exists, build the index for the first time
+# ---------------- Augmented palette index ----------------
+_palette_names: list = []
+_palette_hexes: list = []
+_palette_parents: list = []
+_palette_lab: np.ndarray = np.zeros((0, 3))
+
+
+def _rebuild_palette_index():
+    global _palette_names, _palette_hexes, _palette_parents, _palette_lab
+
+    entries = []
+    for e in BASE_PALETTE:
+        rgb = _hex_to_rgb(e["hex"])
+        entries.append({
+            "name": e["name"],
+            "hex": e["hex"],
+            "parent": e["parent"],
+            "rgb": rgb,
+        })
+
+    # User anchors are only added if their corrected color isn't already a near-duplicate
+    # of an existing entry — keeps the palette from drifting on near-misses.
+    base_lab = rgb_to_lab(np.array([e["rgb"] for e in entries], dtype=float))
+    for anchor in _corrections.get("user_anchors", []):
+        anchor_rgb = tuple(anchor.get("corrected_rgb") or _hex_to_rgb(anchor["hex"]))
+        anchor_lab = rgb_to_lab(np.asarray(anchor_rgb, dtype=float))
+        deltas = np.sqrt(np.sum((base_lab - anchor_lab) ** 2, axis=1))
+        nearest = int(np.argmin(deltas))
+        if deltas[nearest] < 8.0 and entries[nearest]["name"].lower() == anchor["name"].lower():
+            # Same name and very close — already represented, skip
+            continue
+        entries.append({
+            "name": anchor["name"],
+            "hex": anchor["hex"],
+            "parent": anchor["parent"],
+            "rgb": anchor_rgb,
+        })
+
+    _palette_names = [e["name"] for e in entries]
+    _palette_hexes = [e["hex"] for e in entries]
+    _palette_parents = [e["parent"] for e in entries]
+    rgbs = np.array([e["rgb"] for e in entries], dtype=float)
+    _palette_lab = rgb_to_lab(rgbs)
+
+
 _rebuild_palette_index()
 
 
-# ---------------- Classification ----------------
+# ---------------- Single-RGB classification ----------------
 def classify_color(rgb):
-    """Map an RGB tuple to a palette entry. Returns dict {name, hex, parent}."""
+    """Map a single RGB to the nearest palette entry. Returns {name, hex, parent}."""
     lab = rgb_to_lab(np.asarray(rgb, dtype=float))
     deltas = np.sqrt(np.sum((_palette_lab - lab) ** 2, axis=1))
     idx = int(np.argmin(deltas))
@@ -196,55 +194,36 @@ def classify_color(rgb):
     }
 
 
-# ---------------- Image extractors (unchanged) ----------------
-def extract_garment_color(img_path_or_bytes):
-    img = Image.open(img_path_or_bytes).convert("RGB")
-    arr = np.array(img)
-    h, w, _ = arr.shape
+def classify_with_anchor_check(rgb):
+    """Like classify_color, but also returns whether a user anchor was the winner.
 
+    User anchors are appended to the augmented palette. We can detect that the
+    chosen entry came from a correction by checking its index against the base
+    palette length.
+    """
+    lab = rgb_to_lab(np.asarray(rgb, dtype=float))
+    deltas = np.sqrt(np.sum((_palette_lab - lab) ** 2, axis=1))
+    idx = int(np.argmin(deltas))
+    return {
+        "name": _palette_names[idx],
+        "hex": _palette_hexes[idx],
+        "parent": _palette_parents[idx],
+    }, idx >= len(BASE_PALETTE)
+
+
+# ---------------- Pixel sampling (per mode) ----------------
+def _sample_garment_pixels(arr):
+    h, w, _ = arr.shape
     regions = [
         arr[int(h * 0.30): int(h * 0.45), int(w * 0.38): int(w * 0.62)],
         arr[int(h * 0.45): int(h * 0.60), int(w * 0.35): int(w * 0.65)],
         arr[int(h * 0.55): int(h * 0.68), int(w * 0.38): int(w * 0.62)],
     ]
-    all_px = np.vstack([r.reshape(-1, 3) for r in regions])
-    r_ch = all_px[:, 0].astype(int)
-    g_ch = all_px[:, 1].astype(int)
-    b_ch = all_px[:, 2].astype(int)
-
-    pre_median = np.median(all_px, axis=0)
-    pm_min = pre_median.min()
-    pm_max = pre_median.max()
-    product_is_white = all(c > 215 for c in pre_median)
-    product_is_gray = (pm_max - pm_min) < 8 and 180 < pm_min < 225
-
-    kill = []
-    if not product_is_white:
-        kill.append((r_ch > 228) & (g_ch > 228) & (b_ch > 228))
-    if not product_is_gray and not product_is_white:
-        neutral = (
-            (abs(r_ch - g_ch) < 8) & (abs(g_ch - b_ch) < 8)
-            & (abs(r_ch - b_ch) < 10) & (r_ch > 150) & (r_ch < 230)
-        )
-        kill.append(neutral)
-
-    if kill:
-        m = np.zeros(len(all_px), dtype=bool)
-        for k in kill:
-            m |= k
-        keep = ~m
-        if keep.sum() > 500:
-            all_px = all_px[keep]
-
-    final = np.median(all_px, axis=0).astype(int)
-    return tuple(int(c) for c in final)
+    return np.vstack([r.reshape(-1, 3) for r in regions])
 
 
-def extract_footwear_color(img_path_or_bytes):
-    img = Image.open(img_path_or_bytes).convert("RGB")
-    arr = np.array(img)
+def _sample_footwear_pixels(arr):
     h, w, _ = arr.shape
-
     regions = [
         arr[int(h * 0.35): int(h * 0.55), int(w * 0.20): int(w * 0.50)],
         arr[int(h * 0.35): int(h * 0.55), int(w * 0.50): int(w * 0.80)],
@@ -252,7 +231,11 @@ def extract_footwear_color(img_path_or_bytes):
         arr[int(h * 0.55): int(h * 0.80), int(w * 0.50): int(w * 0.80)],
         arr[int(h * 0.45): int(h * 0.75), int(w * 0.35): int(w * 0.65)],
     ]
-    all_px = np.vstack([r.reshape(-1, 3) for r in regions])
+    return np.vstack([r.reshape(-1, 3) for r in regions])
+
+
+def _filter_pixels(all_px, mode):
+    """Strip background and (for footwear) skin from the sampled pixels."""
     r_ch = all_px[:, 0].astype(int)
     g_ch = all_px[:, 1].astype(int)
     b_ch = all_px[:, 2].astype(int)
@@ -264,8 +247,12 @@ def extract_footwear_color(img_path_or_bytes):
     product_is_gray = (pm_max - pm_min) < 8 and 180 < pm_min < 225
 
     kill_masks = []
+
+    # Near-white background — strip unless the product itself is near-white
     if not product_is_white:
-        kill_masks.append((r_ch > 225) & (g_ch > 225) & (b_ch > 225))
+        kill_masks.append((r_ch > 228) & (g_ch > 228) & (b_ch > 228))
+
+    # Neutral gray background (concrete/walls) — strip unless product is gray
     if not product_is_gray and not product_is_white:
         neutral = (
             (abs(r_ch - g_ch) < 8) & (abs(g_ch - b_ch) < 8)
@@ -273,105 +260,276 @@ def extract_footwear_color(img_path_or_bytes):
         )
         kill_masks.append(neutral)
 
-    skin = (
-        (r_ch > g_ch) & (g_ch > b_ch)
-        & ((r_ch - b_ch) > 25) & ((r_ch - b_ch) < 100)
-        & (r_ch > 130) & (r_ch < 245)
-        & ((r_ch - g_ch) <= (r_ch - b_ch))
-        & (abs((g_ch - b_ch) - (r_ch - g_ch)) < 30)
-    )
-    if skin.sum() < len(all_px) * 0.65:
-        kill_masks.append(skin)
+    if mode == "footwear":
+        skin = (
+            (r_ch > g_ch) & (g_ch > b_ch)
+            & ((r_ch - b_ch) > 25) & ((r_ch - b_ch) < 100)
+            & (r_ch > 130) & (r_ch < 245)
+            & ((r_ch - g_ch) <= (r_ch - b_ch))
+            & (abs((g_ch - b_ch) - (r_ch - g_ch)) < 30)
+        )
+        # Only strip skin if it isn't the dominant content (otherwise the product itself is skin-toned)
+        if skin.sum() < len(all_px) * 0.65:
+            kill_masks.append(skin)
 
-    if kill_masks:
-        m = np.zeros(len(all_px), dtype=bool)
-        for k in kill_masks:
-            m |= k
-        keep = ~m
-        if keep.sum() > 400:
-            all_px = all_px[keep]
+    if not kill_masks:
+        return all_px
 
-    if len(all_px) == 0:
-        return (128, 128, 128)
+    combined = np.zeros(len(all_px), dtype=bool)
+    for m in kill_masks:
+        combined |= m
+    keep = ~combined
+    if keep.sum() < 500:
+        return all_px  # filtering would leave too little, abort
+    return all_px[keep]
 
-    brightness = all_px.max(axis=1)
-    brightness_std = brightness.std()
-    px_arr = all_px.astype(float) / 255.0
-    px_max = px_arr.max(axis=1)
-    px_min = px_arr.min(axis=1)
-    sat = np.where(px_max > 0, (px_max - px_min) / np.maximum(px_max, 1e-9), 0)
-    sat_std = sat.std()
-    is_busy = (brightness_std > 55) and (sat_std > 0.18)
 
-    median_rgb = np.median(all_px, axis=0).astype(int)
-    dark_mask = brightness < 60
-    dark_frac = dark_mask.sum() / len(all_px)
+# ---------------- K-means in Lab space ----------------
+def _kmeans_lab(pixels_rgb, k, iters=KMEANS_ITERS, seed=42):
+    """Simple k-means on pixels in Lab space. Returns (labels, centroids_rgb, shares)."""
+    n = len(pixels_rgb)
+    if n == 0:
+        return np.array([]), np.empty((0, 3)), np.array([])
+    if n < k:
+        k = max(1, n)
 
-    if is_busy and dark_frac > 0.15:
-        dark_px = all_px[dark_mask]
-        final = np.median(dark_px, axis=0).astype(int)
+    # Subsample for speed
+    rng = np.random.default_rng(seed)
+    if n > KMEANS_SAMPLE_LIMIT:
+        sample_idx = rng.choice(n, KMEANS_SAMPLE_LIMIT, replace=False)
+        sample_rgb = pixels_rgb[sample_idx]
     else:
-        final = median_rgb
+        sample_rgb = pixels_rgb
 
-    return tuple(int(c) for c in final)
+    sample_lab = rgb_to_lab(sample_rgb.astype(float))
+
+    # k-means++ seeding for stability
+    centroids = np.empty((k, 3))
+    centroids[0] = sample_lab[rng.integers(0, len(sample_lab))]
+    for i in range(1, k):
+        d2 = np.min(np.sum((sample_lab[:, None, :] - centroids[:i][None, :, :]) ** 2, axis=2), axis=1)
+        if d2.sum() == 0:
+            centroids[i] = sample_lab[rng.integers(0, len(sample_lab))]
+            continue
+        probs = d2 / d2.sum()
+        cum = np.cumsum(probs)
+        r = rng.random()
+        idx = int(np.searchsorted(cum, r))
+        idx = min(idx, len(sample_lab) - 1)
+        centroids[i] = sample_lab[idx]
+
+    # Lloyd's iterations — vectorized
+    for _ in range(iters):
+        d = np.sqrt(np.sum((sample_lab[:, None, :] - centroids[None, :, :]) ** 2, axis=2))
+        labels = np.argmin(d, axis=1)
+        new_centroids = centroids.copy()
+        for c in range(k):
+            mask = labels == c
+            if mask.any():
+                new_centroids[c] = sample_lab[mask].mean(axis=0)
+        if np.allclose(new_centroids, centroids, atol=0.5):
+            break
+        centroids = new_centroids
+
+    # Final labels for the sample
+    d = np.sqrt(np.sum((sample_lab[:, None, :] - centroids[None, :, :]) ** 2, axis=2))
+    labels = np.argmin(d, axis=1)
+
+    shares = np.array([(labels == c).sum() / len(labels) for c in range(k)])
+
+    # Centroid RGB = mean of original RGBs in each cluster
+    centroids_rgb = np.empty((k, 3))
+    for c in range(k):
+        mask = labels == c
+        if mask.any():
+            centroids_rgb[c] = sample_rgb[mask].mean(axis=0)
+        else:
+            centroids_rgb[c] = np.array([128, 128, 128])
+
+    return labels, centroids_rgb, shares
+
+
+# ---------------- Cluster post-processing ----------------
+def _merge_close_clusters(centroids_rgb, shares):
+    """Merge clusters whose Lab Delta E is below MERGE_THRESHOLD.
+
+    Returns (merged_centroids_rgb, merged_shares).
+    """
+    if len(centroids_rgb) <= 1:
+        return centroids_rgb, shares
+
+    centroids_lab = rgb_to_lab(centroids_rgb.astype(float))
+    n = len(centroids_lab)
+    parent = list(range(n))
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[ra] = rb
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            d = np.sqrt(np.sum((centroids_lab[i] - centroids_lab[j]) ** 2))
+            if d < MERGE_THRESHOLD:
+                union(i, j)
+
+    # Group
+    groups = {}
+    for i in range(n):
+        root = find(i)
+        groups.setdefault(root, []).append(i)
+
+    merged_rgb = []
+    merged_shares = []
+    for members in groups.values():
+        total_share = sum(shares[m] for m in members)
+        # Weighted-by-share centroid in RGB
+        weighted = np.sum([centroids_rgb[m] * shares[m] for m in members], axis=0) / total_share
+        merged_rgb.append(weighted)
+        merged_shares.append(total_share)
+
+    merged_rgb = np.array(merged_rgb)
+    merged_shares = np.array(merged_shares)
+    # Sort by share descending
+    order = np.argsort(-merged_shares)
+    return merged_rgb[order], merged_shares[order]
+
+
+# ---------------- High-level extraction ----------------
+def extract_colors(img_path_or_bytes, mode):
+    """Extract one or more dominant colors from an image.
+
+    Returns list of {centroid_rgb, share}, sorted by share descending,
+    with at most 3 entries and each entry having share >= MIN_SHARE_PCT.
+    """
+    img = Image.open(img_path_or_bytes).convert("RGB")
+    arr = np.array(img)
+
+    if mode == "footwear":
+        all_px = _sample_footwear_pixels(arr)
+    else:
+        all_px = _sample_garment_pixels(arr)
+
+    filtered = _filter_pixels(all_px, mode)
+
+    if len(filtered) == 0:
+        return [{"centroid_rgb": (128, 128, 128), "share": 1.0}]
+
+    # k-means on filtered
+    _labels, centroids_rgb, shares = _kmeans_lab(filtered, k=MAX_CLUSTERS)
+
+    # Drop tiny clusters before merging
+    keep = shares >= MIN_SHARE_PCT
+    if keep.sum() == 0:
+        # Fallback: keep the largest
+        idx = int(np.argmax(shares))
+        centroids_rgb = centroids_rgb[idx:idx + 1]
+        shares = shares[idx:idx + 1]
+    else:
+        centroids_rgb = centroids_rgb[keep]
+        shares = shares[keep]
+
+    # Merge perceptually-close clusters (e.g. shadowed-black + lit-black)
+    centroids_rgb, shares = _merge_close_clusters(centroids_rgb, shares)
+
+    # Renormalize shares
+    shares = shares / shares.sum()
+
+    # Re-sort by share desc
+    order = np.argsort(-shares)
+    centroids_rgb = centroids_rgb[order]
+    shares = shares[order]
+
+    return [
+        {"centroid_rgb": tuple(int(c) for c in centroids_rgb[i]), "share": float(shares[i])}
+        for i in range(len(centroids_rgb))
+    ]
 
 
 # ---------------- Image hashing ----------------
 def hash_image_bytes(img_bytes: bytes) -> str:
-    """Stable hash for image-hash override lookups."""
     return hashlib.sha256(img_bytes).hexdigest()
 
 
-# ---------------- Public API ----------------
+# ---------------- Public top-level API ----------------
+ROLES = ["base", "print", "print2"]
+
+
 def process_image(img_source, mode="garment", image_bytes: Optional[bytes] = None):
-    """Extract and classify color from one image.
-
-    If image_bytes is provided, we check the corrections store for an
-    exact-image override before running the classifier.
-
-    Returns dict:
-        name, hex, parent      -- classified color
-        sampled_rgb, sampled_hex -- the raw color we read from the image
-        from_correction        -- True if served from image-hash override
-        image_hash             -- sha256 of the image (so the frontend can
-                                  reference it when submitting a correction)
+    """Extract & classify colors. Returns dict:
+        {
+          colors: [
+              {role, name, hex, parent, sampled_rgb, sampled_hex,
+               share, from_correction},
+              ...
+          ],
+          is_multi: bool,            # True iff len(colors) >= 3 distinct
+          image_hash: str | None,
+        }
     """
-    extractor = extract_footwear_color if mode == "footwear" else extract_garment_color
-    rgb = extractor(img_source)
+    image_hash = hash_image_bytes(image_bytes) if image_bytes else None
 
-    image_hash = None
-    from_correction = False
-    classified = None
-
-    if image_bytes is not None:
-        image_hash = hash_image_bytes(image_bytes)
+    # Image-hash override (only applies when we have an exact-image pin)
+    override = None
+    if image_hash:
         with _lock:
             override = _corrections.get("image_overrides", {}).get(image_hash)
-        if override:
-            classified = {
-                "name": override["name"],
-                "hex": override["hex"],
-                "parent": override["parent"],
-            }
-            from_correction = True
 
-    if classified is None:
-        classified = classify_color(rgb)
+    if override:
+        # Reconstruct response from saved override (preserves color list)
+        return {
+            "colors": [
+                {
+                    "role": c.get("role", ROLES[i] if i < len(ROLES) else f"color{i}"),
+                    "name": c["name"],
+                    "hex": c["hex"],
+                    "parent": c["parent"],
+                    "sampled_rgb": c.get("sampled_rgb", _hex_to_rgb(c["hex"])),
+                    "sampled_hex": _rgb_to_hex(c.get("sampled_rgb", _hex_to_rgb(c["hex"]))),
+                    "share": c.get("share", 1.0 / len(override["colors"])),
+                    "from_correction": True,
+                }
+                for i, c in enumerate(override["colors"])
+            ],
+            "is_multi": override.get("is_multi", False),
+            "image_hash": image_hash,
+        }
+
+    # Standard path
+    extracted = extract_colors(img_source, mode=mode)
+    is_multi = len(extracted) >= 3
+
+    colors = []
+    for i, item in enumerate(extracted):
+        sampled_rgb = item["centroid_rgb"]
+        share = item["share"]
+        classified, from_anchor = classify_with_anchor_check(sampled_rgb)
+        colors.append({
+            "role": ROLES[i] if i < len(ROLES) else f"color{i}",
+            "name": classified["name"],
+            "hex": classified["hex"],
+            "parent": classified["parent"],
+            "sampled_rgb": list(sampled_rgb),
+            "sampled_hex": _rgb_to_hex(sampled_rgb),
+            "share": share,
+            "from_correction": from_anchor,
+        })
 
     return {
-        "name": classified["name"],
-        "hex": classified["hex"],
-        "parent": classified["parent"],
-        "sampled_rgb": list(rgb),
-        "sampled_hex": f"#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}",
-        "from_correction": from_correction,
+        "colors": colors,
+        "is_multi": is_multi,
         "image_hash": image_hash,
     }
 
 
 # ---------------- Corrections write-path ----------------
 def _save_corrections_locked():
-    """Write current _corrections dict to disk. Caller must hold _lock."""
     tmp = _CORRECTIONS_PATH.with_suffix(".tmp")
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(_corrections, f, indent=2)
@@ -384,29 +542,32 @@ def add_correction(
     corrected_hex: str,
     corrected_name: Optional[str] = None,
     corrected_family: Optional[str] = None,
+    role: Optional[str] = None,
+    full_colors_for_pin: Optional[list] = None,
 ):
-    """Record a user correction.
+    """Record a user correction for one color (one role on one image).
 
-    Stores both:
-    - image_override (if image_hash provided): exact-match shortcut.
-    - user_anchor: the sampled RGB -> corrected color mapping that
-      augments the palette for future similar images.
+    Stores:
+      - user_anchor: (sampled_rgb -> corrected name/hex/parent) so future
+        images with similar dominant colors classify correctly.
+      - image_override (if image_hash + full_colors_for_pin provided):
+        a complete pinned answer for that exact image (all roles).
+        full_colors_for_pin is the list of *all* colors for the image
+        with the corrected one substituted, so re-uploading the same
+        image returns the full corrected multi-color answer.
 
-    Returns the new entry that will be used for classification.
+    Returns the saved color.
     """
     corrected_hex = corrected_hex.upper()
     if not corrected_hex.startswith("#"):
         corrected_hex = "#" + corrected_hex
 
-    # Default name = "Custom #RRGGBB" when user picks a free hex without naming
     if not corrected_name:
         corrected_name = f"Custom {corrected_hex}"
     if not corrected_family:
-        # Auto-classify the family by finding nearest base-palette parent
-        # from the picked hex (gives sensible default like "Blue" / "Brown").
+        # Auto-detect family from the picked hex against base palette only
         picked_rgb = _hex_to_rgb(corrected_hex)
         picked_lab = rgb_to_lab(np.asarray(picked_rgb, dtype=float))
-        # Use only base palette for family inference (don't bootstrap from anchors)
         base_rgbs = np.array([_hex_to_rgb(e["hex"]) for e in BASE_PALETTE], dtype=float)
         base_lab = rgb_to_lab(base_rgbs)
         deltas = np.sqrt(np.sum((base_lab - picked_lab) ** 2, axis=1))
@@ -418,23 +579,21 @@ def add_correction(
         "name": corrected_name,
         "hex": corrected_hex,
         "parent": corrected_family,
-        "rgb": [int(c) for c in sampled_rgb],
-        "weight": 1,
+        "rgb": [int(c) for c in sampled_rgb],   # the rgb we extracted from the image
+        "corrected_rgb": list(_hex_to_rgb(corrected_hex)),
+        "role": role,
         "ts": ts,
     }
 
     with _lock:
         _corrections.setdefault("user_anchors", []).append(anchor)
-        if image_hash:
+        if image_hash and full_colors_for_pin:
             _corrections.setdefault("image_overrides", {})[image_hash] = {
-                "name": corrected_name,
-                "hex": corrected_hex,
-                "parent": corrected_family,
-                "sampled_rgb": [int(c) for c in sampled_rgb],
+                "colors": full_colors_for_pin,
+                "is_multi": len(full_colors_for_pin) >= 3,
                 "ts": ts,
             }
         _save_corrections_locked()
-        # Rebuild palette index so the new anchor is live for the next request
         _rebuild_palette_index()
 
     return {
@@ -445,13 +604,11 @@ def add_correction(
 
 
 def get_corrections_snapshot() -> dict:
-    """Return a deep-ish copy of the corrections store."""
     with _lock:
         return json.loads(json.dumps(_corrections))
 
 
 def get_corrections_stats() -> dict:
-    """Summary of what's been learned."""
     with _lock:
         return {
             "image_overrides_count": len(_corrections.get("image_overrides", {})),
@@ -462,11 +619,6 @@ def get_corrections_stats() -> dict:
 
 
 def import_corrections(payload: dict, mode: str = "merge") -> dict:
-    """Import a corrections payload (e.g. from a previous export).
-
-    mode='merge'   -> add to existing
-    mode='replace' -> overwrite
-    """
     with _lock:
         global _corrections
         if mode == "replace":
@@ -488,7 +640,6 @@ def import_corrections(payload: dict, mode: str = "merge") -> dict:
 
 
 def reset_corrections() -> dict:
-    """Wipe all corrections (for debugging / re-starting calibration)."""
     with _lock:
         global _corrections
         _corrections = _empty_corrections()
