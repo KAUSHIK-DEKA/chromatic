@@ -440,7 +440,7 @@
 
   <header>
     <div class="brand">Chro<em>matic</em></div>
-    <div class="tagline">v3 · Color Extractor</div>
+    <div class="tagline">v3.1 · Color Extractor</div>
   </header>
 
   <nav class="tabs" role="tablist">
@@ -783,6 +783,23 @@ async function classifyCurrentImage() {
 function renderResult() {
   if (!currentResult) return;
   const { colors, is_multi } = currentResult;
+  // Defensive: if the response shape isn't what we expect, show a clear
+  // diagnostic instead of rendering garbage.
+  if (!Array.isArray(colors) || colors.length === 0) {
+    multiBannerWrap.innerHTML = '';
+    colorsStack.innerHTML = `
+      <div class="color-block" style="border-color:#C13030">
+        <div class="color-block-head">
+          <span class="role-tag" style="background:#C13030;color:#fff">error</span>
+        </div>
+        <div style="font-size:14px; line-height:1.5; padding:8px 0">
+          The server returned a result without color data. Try a hard refresh
+          (Ctrl+Shift+R / Cmd+Shift+R) — your browser may be caching an
+          older version of this page.
+        </div>
+      </div>`;
+    return;
+  }
   multiBannerWrap.innerHTML = is_multi
     ? '<div class="multi-banner">Multi-color print detected</div>'
     : '';

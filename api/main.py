@@ -55,7 +55,16 @@ MAX_SINGLE_IMAGE_BYTES = 10 * 1024 * 1024
 def serve_frontend():
     html_path = STATIC_DIR / "index.html"
     if html_path.exists():
-        return FileResponse(html_path)
+        # Disable caching for the HTML shell so users always get the latest UI
+        # after a Render redeploy. Without this, browsers (and Render's CDN
+        # layer) can serve a stale index.html for hours.
+        return FileResponse(
+            html_path,
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+            },
+        )
     raise HTTPException(status_code=404, detail="index.html not found")
 
 

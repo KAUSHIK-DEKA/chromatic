@@ -212,13 +212,78 @@ def classify_with_anchor_check(rgb):
 
 
 # ---------------- Pixel sampling (per mode) ----------------
-def _sample_garment_pixels(arr):
+def _detect_background_colors(arr, samples=200):
+    """Sample pixels from the very edges of the image to estimate background colors.
+
+    Lifestyle product photos have the product in the central area and the
+    background (couch, wall, floor, paper) at the edges. By sampling the edges
+    we learn what colors to *suppress* in the main sampling.
+
+    Returns a list of representative background RGBs ONLY when the edges look
+    meaningfully different from the center. For tightly-cropped product
+    photos the product fills the frame and edges == center, so we return
+    nothing and skip background removal (avoids stripping the product itself).
+    """
     h, w, _ = arr.shape
-    regions = [
-        arr[int(h * 0.30): int(h * 0.45), int(w * 0.38): int(w * 0.62)],
-        arr[int(h * 0.45): int(h * 0.60), int(w * 0.35): int(w * 0.65)],
-        arr[int(h * 0.55): int(h * 0.68), int(w * 0.38): int(w * 0.62)],
-    ]
+    band = max(1, int(min(h, w) * 0.04))  # 4% of the smaller dim
+
+    edges = np.vstack([
+        arr[:band, :].reshape(-1, 3),
+        arr[-band:, :].reshape(-1, 3),
+        arr[band:-band, :band].reshape(-1, 3),
+        arr[band:-band, -band:].reshape(-1, 3),
+    ])
+
+    # Compare edge median vs central median in Lab. If they're close, this is
+    # a tight product crop and edges are NOT background — skip detection.
+    cy1, cy2 = int(h * 0.30), int(h * 0.70)
+    cx1, cx2 = int(w * 0.30), int(w * 0.70)
+    center = arr[cy1:cy2, cx1:cx2].reshape(-1, 3)
+    if len(edges) == 0 or len(center) == 0:
+        return []
+    edge_lab = rgb_to_lab(np.median(edges, axis=0).astype(float))
+    center_lab = rgb_to_lab(np.median(center, axis=0).astype(float))
+    edge_center_dE = float(np.sqrt(np.sum((edge_lab - center_lab) ** 2)))
+    if edge_center_dE < 12.0:
+        # Edges and center are similar — likely a tight product crop. Don't
+        # treat the edges as background, we'd accidentally strip the product.
+        return []
+
+    # Take a random sample for clustering speed
+    rng = np.random.default_rng(0)
+    if len(edges) > samples * 5:
+        idx = rng.choice(len(edges), samples * 5, replace=False)
+        edges = edges[idx]
+
+    if len(edges) < 20:
+        return []
+    _labels, centroids_rgb, shares = _kmeans_lab(edges, k=3)
+    return [centroids_rgb[i] for i in range(len(centroids_rgb)) if shares[i] > 0.15]
+
+
+def _sample_garment_pixels(arr):
+    """Sample a generous central region. Designed to capture the product
+    whether the image is portrait or landscape, centered or off-center.
+    """
+    h, w, _ = arr.shape
+    aspect = w / max(h, 1)
+
+    if aspect > 1.3:
+        # Landscape — product may be anywhere; sample broadly
+        regions = [
+            arr[int(h * 0.20): int(h * 0.55), int(w * 0.10): int(w * 0.50)],
+            arr[int(h * 0.20): int(h * 0.55), int(w * 0.50): int(w * 0.90)],
+            arr[int(h * 0.40): int(h * 0.80), int(w * 0.10): int(w * 0.50)],
+            arr[int(h * 0.40): int(h * 0.80), int(w * 0.50): int(w * 0.90)],
+            arr[int(h * 0.30): int(h * 0.70), int(w * 0.30): int(w * 0.70)],
+        ]
+    else:
+        # Portrait or square — product is typically centered
+        regions = [
+            arr[int(h * 0.25): int(h * 0.45), int(w * 0.30): int(w * 0.70)],
+            arr[int(h * 0.40): int(h * 0.60), int(w * 0.25): int(w * 0.75)],
+            arr[int(h * 0.55): int(h * 0.75), int(w * 0.30): int(w * 0.70)],
+        ]
     return np.vstack([r.reshape(-1, 3) for r in regions])
 
 
@@ -234,8 +299,13 @@ def _sample_footwear_pixels(arr):
     return np.vstack([r.reshape(-1, 3) for r in regions])
 
 
-def _filter_pixels(all_px, mode):
-    """Strip background and (for footwear) skin from the sampled pixels."""
+def _filter_pixels(all_px, mode, bg_colors=None):
+    """Strip background and (for footwear) skin from the sampled pixels.
+
+    bg_colors: optional list of RGB centroids representing detected background
+    colors (e.g. couch, carpet, paper). Pixels within Delta E 12 of any are
+    considered background and stripped.
+    """
     r_ch = all_px[:, 0].astype(int)
     g_ch = all_px[:, 1].astype(int)
     b_ch = all_px[:, 2].astype(int)
@@ -252,13 +322,21 @@ def _filter_pixels(all_px, mode):
     if not product_is_white:
         kill_masks.append((r_ch > 228) & (g_ch > 228) & (b_ch > 228))
 
-    # Neutral gray background (concrete/walls) — strip unless product is gray
+    # Neutral gray background — strip unless product is gray
     if not product_is_gray and not product_is_white:
         neutral = (
             (abs(r_ch - g_ch) < 8) & (abs(g_ch - b_ch) < 8)
             & (abs(r_ch - b_ch) < 10) & (r_ch > 150) & (r_ch < 230)
         )
         kill_masks.append(neutral)
+
+    # Detected background colors (from image edges) — strip pixels close to any
+    if bg_colors:
+        all_lab = rgb_to_lab(all_px.astype(float))
+        for bg_rgb in bg_colors:
+            bg_lab = rgb_to_lab(np.asarray(bg_rgb, dtype=float))
+            d = np.sqrt(np.sum((all_lab - bg_lab) ** 2, axis=1))
+            kill_masks.append(d < 12.0)
 
     if mode == "footwear":
         skin = (
@@ -268,7 +346,6 @@ def _filter_pixels(all_px, mode):
             & ((r_ch - g_ch) <= (r_ch - b_ch))
             & (abs((g_ch - b_ch) - (r_ch - g_ch)) < 30)
         )
-        # Only strip skin if it isn't the dominant content (otherwise the product itself is skin-toned)
         if skin.sum() < len(all_px) * 0.65:
             kill_masks.append(skin)
 
@@ -280,7 +357,7 @@ def _filter_pixels(all_px, mode):
         combined |= m
     keep = ~combined
     if keep.sum() < 500:
-        return all_px  # filtering would leave too little, abort
+        return all_px
     return all_px[keep]
 
 
@@ -337,12 +414,15 @@ def _kmeans_lab(pixels_rgb, k, iters=KMEANS_ITERS, seed=42):
 
     shares = np.array([(labels == c).sum() / len(labels) for c in range(k)])
 
-    # Centroid RGB = mean of original RGBs in each cluster
+    # Centroid RGB = median per channel (more robust than mean to outlier
+    # pixels at cluster boundaries — for example, anti-aliased edges between
+    # a black print and cream base produce gray pixels that drag the mean
+    # but not the median).
     centroids_rgb = np.empty((k, 3))
     for c in range(k):
         mask = labels == c
         if mask.any():
-            centroids_rgb[c] = sample_rgb[mask].mean(axis=0)
+            centroids_rgb[c] = np.median(sample_rgb[mask], axis=0)
         else:
             centroids_rgb[c] = np.array([128, 128, 128])
 
@@ -411,12 +491,16 @@ def extract_colors(img_path_or_bytes, mode):
     img = Image.open(img_path_or_bytes).convert("RGB")
     arr = np.array(img)
 
+    # Detect background colors from image edges (couch, carpet, paper, etc.)
+    # Skip for footwear since its sampling already excludes the upper image.
+    bg_colors = _detect_background_colors(arr) if mode == "garment" else None
+
     if mode == "footwear":
         all_px = _sample_footwear_pixels(arr)
     else:
         all_px = _sample_garment_pixels(arr)
 
-    filtered = _filter_pixels(all_px, mode)
+    filtered = _filter_pixels(all_px, mode, bg_colors=bg_colors)
 
     if len(filtered) == 0:
         return [{"centroid_rgb": (128, 128, 128), "share": 1.0}]
